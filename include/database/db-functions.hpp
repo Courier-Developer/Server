@@ -3,7 +3,8 @@
 #include "pqxx/pqxx"
 #include <feverrpc/threadmanager.hpp>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <iterator>
@@ -11,7 +12,7 @@
 
 #define DBLOGINFO                                                              \
     "dbname=postgres user=postgres password=example "                          \
-    "hostaddr=postgres.fkynjyq.com port=5432"
+    "hostaddr=59.110.233.235 port=5432"
 #define CONNECTION_ERROR "connection erroe"
 #define NOT_FOUND_ERROR "not found"
 #define SUCCESS_INFO "success"
@@ -140,6 +141,8 @@ int register_account(std::string username, std::string password,
  * @return false 数据库连接错误
  */
 bool logout(int uid) {
+    uid = threadManager.get_uid();
+    printf("[db-funcs][logout]%d\n",uid);
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -160,6 +163,7 @@ bool logout(int uid) {
  * @return Response<UserInfo>
  */
 Response<UserInfo> get_info(int uid) {
+    uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -194,6 +198,7 @@ Response<UserInfo> get_info(int uid) {
  * @return false 数据库连接错误
  */
 bool update_info(int uid, UserInfo ui) {
+    uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -219,6 +224,7 @@ bool update_info(int uid, UserInfo ui) {
  * @return Response<std::vector<Friend>> 包含所有好友信息的vector
  */
 Response<std::vector<Friend>> list_friends(int uid) {
+    uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -262,6 +268,7 @@ Response<std::vector<Friend>> list_friends(int uid) {
  * @return Response<Friend> 返回Friend的信息
  */
 Response<Friend> get_friend(int uid, int friend_id) {
+    uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -308,6 +315,7 @@ Response<Friend> get_friend(int uid, int friend_id) {
 /// 需要同时向ThreadManager发送请求
 /// 在数据库中存储的时候需要存储单向的
 bool request_friend(int uid, int friend_id) {
+    uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -331,6 +339,7 @@ bool request_friend(int uid, int friend_id) {
 ///
 /// 在数据库中存储需要存储双向的
 bool make_friend(int uid, int friend_id) {
+    uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);

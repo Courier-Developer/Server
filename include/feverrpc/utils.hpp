@@ -6,17 +6,21 @@
 #include <iterator>
 #include <string>
 #include <vector>
-using namespace std;
+#include <iostream>
 
 struct Login {
-    string username;
-    string password;
-    string ip;
+    std::string username;
+    std::string password;
+    std::string ip;
     MSGPACK_DEFINE(username, password, ip);
+    friend std::ostream& operator<<(std::ostream &os, Login &l) {
+        std::cout << "[" << l.username << ',' << l.password << ',' << l.ip <<"]\n";
+        return os;
+    }
 };
 
-vector<char> read_file(string file_name);
-void save_file(string file_name, vector<char> &data);
+std::vector<char> read_file(std::string file_name);
+void save_file(std::string file_name, std::vector<char> &data);
 // int login(Login);
 
 #endif // FEVERRPC_UT<< data<< data<< data<< data<< data<< dataILS_H_
