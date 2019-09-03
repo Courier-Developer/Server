@@ -52,18 +52,18 @@ struct UserInfo {
 /// 好友和群聊好友都用这个？
 struct Friend {
     int uid;
-    std::string group; ///< 哪个用户组，是好友与好友关系
+    std::string packageid; ///< 只存好友分组的信息！群聊好友中不用这个字段
     std::string username;
     std::string createdTime;
     std::string lastLoginTime;
     // TODO avatar
-    // TODO 缺少 signature
     std::string birthday;
     bool isMale;
     std::string ip;
     std::string nickname;
     bool isMute;
-    MSGPACK_DEFINE(uid, group, username, createdTime, lastLoginTime, birthday,
+    std::string signature;
+    MSGPACK_DEFINE(uid, packageid, username, createdTime, lastLoginTime, birthday,
                    isMale, ip, nickname, isMute);
     friend std::ostream &operator<<(std::ostream &os, Friend &d) {
         std::cout << "[UserInfo]"
@@ -73,7 +73,7 @@ struct Friend {
                   << ", birthday: " << d.birthday << ", isMale: " << d.isMale
                   << ", nickName: " << d.nickname
                   << ", signature: " << d.nickname << ", ip: " << d.ip
-                  << ", group: " << d.group << std::endl;
+                  << ", packageid: " << d.packageid << std::endl;
         return os;
     }
 };
@@ -112,3 +112,4 @@ struct Message {
         return os;
     }
 };
+
