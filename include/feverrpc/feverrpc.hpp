@@ -24,7 +24,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <feverrpc/threadmanager.hpp>
-#include <feverrpc/utils.hpp>
 #include <functional>
 #include <iostream>
 #include <map>

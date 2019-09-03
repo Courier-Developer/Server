@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <feverrpc/feverrpc.hpp>
+#include <feverrpc/utils.hpp>
 #include <netinet/in.h>
 #include <sys/socket.h>
 
@@ -303,20 +304,30 @@ void Server::s2c() {
                     // 客户端最好迅速断开另一个socket连接
                     printf("[%lld]I want to push this\n",
                            std::this_thread::get_id());
-                    note<int>(new_socket_handler, "push",
-                              push::Push{push::Type::NOTIFY,
-                                         std::string("你已被强制下线。")});
+                    note<int>(new_socket_handler, "push_force_logout",
+                              std::string("你已被强制下线。"));
                     close(new_socket_handler);
                     break;
-                } else if (threadManager.have_push(uid) == false) {
-                    printf("[%lld]没有通知\n", std::this_thread::get_id());
-                    std::this_thread::sleep_for(std::chrono::seconds(2));
-                    std::this_thread::yield();
                 } else {
-                    push::Push p = threadManager.get_push(uid);
-                    std::cout << "有通知" << p << endl;
+                    // 自定义通知
+                    // Friend
+                    if (threadManager.have_push(uid, PushType::FRIEND)) {
+                        threadManager.get_push_friend(uid);
+                        // TODO: call client function
+                    } else if (threadManager.have_push(uid,
+                                                       PushType::MESSAGE)) {
+                        threadManager.get_push_message(uid);
+                        // TODO: call client function
+                    } else {
+                        // 没有通知
+                        printf("[%lld]没有通知\n", std::this_thread::get_id());
+                        std::this_thread::yield();
+                    }
+                    // push::Push p = threadManager.get_push(uid);
+                    // std::cout << "有通知" << p << endl;
+                    std::this_thread::sleep_for(std::chrono::seconds(2));
 
-                    note<int>(new_socket_handler, "push", p);
+                    // note<int>(new_socket_handler, "push", p);
                 }
             }
 

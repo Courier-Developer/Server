@@ -4,10 +4,10 @@
 #pragma once
 #include "msgpack.hpp"
 #include <cstdio>
+#include <database/db-classes.hpp>
 #include <iostream>
 #include <map>
 #include <mutex>
-#include <pqxx/pqxx>
 #include <queue>
 #include <string>
 #include <thread>
@@ -19,44 +19,18 @@ using std::queue;
 using std::string;
 using std::thread;
 
-namespace push {
+enum class PushType { MESSAGE, FRIEND };
 
-enum class Type { NOTIFY, SPETIAL };
+MSGPACK_ADD_ENUM(PushType);
 
-class Push {
-    Type type;
-    string message;
-
-  public:
-    MSGPACK_DEFINE(type, message);
-    Push(){};
-    Push(Type tp, string msg) : type(tp), message(msg){};
-    friend std::ostream &operator<<(std::ostream &os, Push &p) {
-        std::string tp;
-        switch (p.type) {
-        case Type::NOTIFY:
-            tp = "通知";
-            break;
-
-        default:
-            tp = "特别通知";
-            break;
-        }
-        os << "Push{" << tp << ',' << p.message << "}" << endl;
-        return os;
-    }
-};
-
-} // namespace push
-MSGPACK_ADD_ENUM(push::Type);
 class UserStatus {
 
   public:
     const thread::id thread_id;
     int socket_handler;
     int count;
-
-    queue<push::Push> pushes;
+    queue<Friend> friend_queue;
+    queue<Message> message_queue;
 
     UserStatus(thread::id tid, int socket_handler)
         : thread_id(tid), count(0), socket_handler(socket_handler){};
@@ -145,25 +119,47 @@ class ThreadManager {
         print();
         return true;
     }
-    bool push(int uid, push::Push _p) {
+    bool push(int uid, Friend &f) {
         std::lock_guard<std::mutex> guard(_mtx);
-        _status[uid].pushes.push(_p);
+        _status[uid].friend_queue.push(f);
         return true;
     }
-    bool have_push(int uid) {
+    bool push(int uid, Message &m) {
+        std::lock_guard<std::mutex> guard(_mtx);
+        _status[uid].message_queue.push(m);
+        return true;
+    }
+    bool have_push(int uid, PushType pt) {
         if (!online(uid))
             return false;
         std::lock_guard<std::mutex> guard(_mtx);
-        if (_status[uid].pushes.empty())
-            return false;
+        // if (_status[uid].friend_queue.empty() &&
+        // _status[uid].message_queue.empty()) return false;
+        if (pt == PushType::FRIEND) {
+            if (_status[uid].friend_queue.empty())
+                return false;
+            else
+                return true;
+        } else {
+            if (_status[uid].message_queue.empty())
+                return false;
+            else
+                return true;
+        }
 
-        return true;
+        return false;
     }
-    push::Push get_push(int uid) {
+    Friend get_push_friend(int uid) {
         std::lock_guard<std::mutex> guard(_mtx);
-        push::Push p = _status[uid].pushes.front();
-        _status[uid].pushes.pop();
-        return p;
+        Friend ret = _status[uid].friend_queue.front();
+        _status[uid].friend_queue.pop();
+        return ret;
+    }
+    Message get_push_message(int uid) {
+        std::lock_guard<std::mutex> guard(_mtx);
+        Message ret = _status[uid].message_queue.front();
+        _status[uid].message_queue.pop();
+        return ret;
     }
     friend std::ostream &operator<<(std::ostream &os,
                                     const ThreadManager &_tm) {
