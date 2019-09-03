@@ -37,7 +37,7 @@
 // TODO MORE DOCS
 
 extern int login(std::string username, std::string password, std::string ip);
-
+extern bool logout(int uid);
 
 /// \brief RPC框架的命名空间
 ///

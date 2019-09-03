@@ -2,6 +2,8 @@
 # Created by https://www.gitignore.io/api/c,c++,cmake,intellij+all,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=c,c++,cmake,intellij+all,visualstudiocode
 
+bin
+
 ### C ###
 # Prerequisites
 *.d

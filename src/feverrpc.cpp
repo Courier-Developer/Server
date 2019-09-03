@@ -4,7 +4,6 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-
 namespace FeverRPC {
 
 int send_data(const int &socket_handler, const char *data_send_buffer,
@@ -14,6 +13,8 @@ int send_data(const int &socket_handler, const char *data_send_buffer,
         send(socket_handler, (void *)&data_send_size, sizeof(unsigned int), 0);
     if (err < 0) {
         puts("error < 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        SocketException e;
+        throw e;
     }
     int sent_size = 0;
 
@@ -27,6 +28,8 @@ int send_data(const int &socket_handler, const char *data_send_buffer,
 
         if (err < 0) {
             puts("error < 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            SocketException e;
+            throw e;
         }
         sent_size += _size;
     }
@@ -40,6 +43,8 @@ int recv_data(const int &socket_handler, msgpack::sbuffer &data_recv_buffer) {
     err = read(socket_handler, (void *)&recv_len, sizeof(unsigned int));
     if (err < 0) {
         puts("error < 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        SocketException e;
+        throw e;
     }
     int recv_size = 0;
     while (recv_size < recv_len) {
@@ -50,6 +55,8 @@ int recv_data(const int &socket_handler, msgpack::sbuffer &data_recv_buffer) {
         // 直接写入 msgpack::sbuffer
         if (err < 0) {
             puts("error < 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            SocketException e;
+            throw e;
         }
         data_recv_buffer.write(_buffer, _size);
 
@@ -277,15 +284,16 @@ void Server::s2c() {
         // 新建线程
         std::thread _thread{[new_socket_handler, this]() {
             int uid = -1;
+            bool forced_logout = false;
             printf("[new thread][s2c] %lld\n", std::this_thread::get_id());
             // 首先调用login函数
             Login _login = note<Login>(new_socket_handler, "login");
-            printf("username:%s,password:%s\n", _login.username.c_str(),
-                   _login.password.c_str());
+            std::cout << "[s2c]" << _login << std::endl;
 
-            uid = login(_login.username,_login.password,_login.ip);
+            uid = login(_login.username, _login.password, _login.ip);
             if (uid < 0) {
                 // 认证失败，将断开连接
+                printf("[%lld][c2s] 认证失败", std::this_thread::get_id());
                 close(new_socket_handler);
                 return;
             }
@@ -308,17 +316,39 @@ void Server::s2c() {
                     note<int>(new_socket_handler, "push_force_logout",
                               std::string("你已被强制下线。"));
                     close(new_socket_handler);
+                    forced_logout = true;
                     break;
                 } else {
                     // 自定义通知
                     // Friend
-                    if (threadManager.have_push(uid, PushType::FRIEND)) {
-                        threadManager.get_push_friend(uid);
-                        // TODO: call client function
-                    } else if (threadManager.have_push(uid,
-                                                       PushType::MESSAGE)) {
-                        threadManager.get_push_message(uid);
-                        // TODO: call client function
+                    if (threadManager.have_push(uid, 1)) {
+                        auto p = threadManager.get_push_friend(uid);
+                        if (p.first == PushType::FRIEND_WANGTED) {
+                            // TODO
+                        } else if (p.first == PushType::FRIEND_CONFIRMED) {
+                            // TODO
+                        } else if (p.first == PushType::FRIEND_DELETED) {
+                            // TODO
+                        }
+                        // Message
+                    } else if (threadManager.have_push(uid, 2)) {
+                        auto p = threadManager.get_push_message(uid);
+                        if (p.first == PushType::MESSAGE) {
+                            // TODO
+                        }
+                        //
+                    } else if (threadManager.have_push(uid, 3)) {
+                        auto p = threadManager.get_push_group(uid);
+                        if (p.first == PushType::GROUP_ADDED) {
+                            // TODO: CALL FUNCITON
+                        }
+                    } else if (threadManager.have_push(uid, 4)) {
+                        auto p = threadManager.get_push_status(uid);
+                        if (p.first == PushType::LOGIN) {
+                            // TODO
+                        } else if (p.first == PushType::LOGOUT) {
+                            // TODO
+                        }
                     } else {
                         // 没有通知
                         printf("[%lld]没有通知\n", std::this_thread::get_id());
@@ -331,7 +361,9 @@ void Server::s2c() {
                     // note<int>(new_socket_handler, "push", p);
                 }
             }
-
+            if (!forced_logout) {
+                logout(uid);
+            }
             printf("[%lld][s2c] leave thread\n", std::this_thread::get_id());
         }};
         _thread.detach();
@@ -363,10 +395,11 @@ void Server::c2s() {
         std::thread _thread{[new_socket_handler, this]() {
             int uid = -1;
             printf("[new thread][c2s] %lld\n", std::this_thread::get_id());
-            puts("waiting for login/register");
+            puts("[c2s]waiting for login/register");
             // 这里同时绑定两个函数 login / register, 可以同时处理登录 / 注册
             // 两个事件
             Serializer _ans = recv_call_and_send(new_socket_handler);
+            puts("[c2s] login/register 调用 success");
             uid = unpack_ret_val<int>(_ans.buffer);
             if (uid < 0) {
                 // 认证失败,退出

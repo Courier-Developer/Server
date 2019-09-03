@@ -9,10 +9,10 @@ MSGPK=-I/Users/alanyoung/Downloads/msgpack-c-master/include
 
 all: main client
 
-main: feverrpc.o main.o threadmanager.o utils.o include/database/db-functions.hpp include/feverrpc/threadmanager.hpp
-	g++ -o bin/server feverrpc.o main.o threadmanager.o utils.o -pthread -lpqxx
+main: feverrpc.o main.o threadmanager.o utils.o tm.o include/database/db-functions.hpp include/feverrpc/threadmanager.hpp
+	g++ -o bin/server feverrpc.o main.o threadmanager.o utils.o tm.o -pthread -lpqxx
 
-client: feverrpc.o clients.o utils.o 
+client: feverrpc.o clients.o utils.o tm.o
 	g++ -o bin/client $^ -pthread  -lpqxx
 
 .PHONY:clean
