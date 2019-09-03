@@ -36,6 +36,9 @@
 
 // TODO MORE DOCS
 
+extern int login(std::string username, std::string password, std::string ip);
+
+
 /// \brief RPC框架的命名空间
 ///
 /// 包含RPC本身，socket通讯相关函数以及自定义异常

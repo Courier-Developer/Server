@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <msgpack.hpp>
 #include <string>
@@ -15,7 +16,7 @@ template <typename T> class Response {
     friend std::ostream &operator<<(std::ostream &os, Response &res) {
         std::cout << "[Response]"
                   << "success:" << res.success << ",msg:" << res.msg
-                  << ",data:" << data << std::endl;
+                  << ",data:" << res.data << std::endl;
         return os;
     }
 };
@@ -103,7 +104,11 @@ struct Message {
     MSGPACK_DEFINE(id, sender, receiver, type, createdTime, isToGroup, content);
     friend std::ostream &operator<<(std::ostream &os, Message &d) {
         std::cout << "[UserInfo]"
-                  << "id: " << d.id << ",sender: " << d.sender << std::endl;
+                  << "id: " << d.id << ",sender: " << d.sender << ", receiver"
+                  << d.receiver << ", createdTime:" << d.createdTime
+                  << ", editedTime: " << d.editedTime
+                  << ", isToGroup: " << d.isToGroup
+                  << ", content: " << d.content << std::endl;
         return os;
     }
 };

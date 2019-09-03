@@ -1,6 +1,7 @@
 #include <feverrpc/feverrpc.hpp>
 #include <feverrpc/threadmanager.hpp>
 #include <feverrpc/utils.hpp>
+#include <database/db-functions.hpp>
 #include <iostream>
 using namespace std;
 
@@ -9,8 +10,13 @@ int deal_push_friend(Friend f) {
     return 2;
 }
 
+int deal_message_push(Message m) {
+    cout << m << endl;
+    return 1;
+}
+
 Login ret_login_info() {
-    return Login{username : "example", password : "password"};
+    return Login{username : "example", password : "password",ip:"test.ip"};
 }
 
 int main() {
@@ -18,7 +24,8 @@ int main() {
     thread _thread{[]() {
         FeverRPC::Client _rpc("127.0.0.1");
         _rpc.bind("login", ret_login_info);
-        _rpc.bind("push", deal_push);
+        _rpc.bind("deal_friend_push", deal_push_friend);
+        _rpc.bind("deal_message_push", deal_message_push);
         _rpc.s2c();
     }};
     thread_guard g(_thread);

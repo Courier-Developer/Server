@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+
 namespace FeverRPC {
 
 int send_data(const int &socket_handler, const char *data_send_buffer,
@@ -282,7 +283,7 @@ void Server::s2c() {
             printf("username:%s,password:%s\n", _login.username.c_str(),
                    _login.password.c_str());
 
-            uid = login(_login);
+            uid = login(_login.username,_login.password,_login.ip);
             if (uid < 0) {
                 // 认证失败，将断开连接
                 close(new_socket_handler);
