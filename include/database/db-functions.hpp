@@ -166,7 +166,7 @@ bool logout(int uid) {
  * @param uid 用户id
  * @return Response<UserInfo>
  */
-Response<UserInfo> get_info(int uid) {
+Response<UserInfo> get_info_by_uid(int uid) {
     uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
@@ -199,13 +199,13 @@ Response<UserInfo> get_info(int uid) {
  * @param username 
  * @return Response<UserInfo> 
  */
-Response<UserInfo> get_info(std::string username) {
+Response<UserInfo> get_info_by_username(std::string username) {
     int id = is_username_exists(username);
     if (id == 0) {
         Response<UserInfo> resp(0, NOT_FOUND_ERROR);
         return resp;
     } else {
-        Response<UserInfo> resp = get_info(id);
+        Response<UserInfo> resp = get_info_by_uid(id);
         return resp;
     }
     
@@ -506,7 +506,7 @@ Response<std::vector<Friend>> get_group_mumber(int group_id) {
         for (pqxx::result::const_iterator row = R_listUsers.begin();
              row != R_listUsers.end(); ++row) {
             Response<UserInfo> tmp(1, "temp");
-            tmp = get_info(row[0].as<int>());
+            tmp = get_info_by_uid(row[0].as<int>());
 
             UserInfo info_as_userInfo = tmp.data;
             Friend info_as_friendInfo;
@@ -681,7 +681,7 @@ UserInfo get_my_info()
     UserInfo info;
     info.id = threadManager.get_uid();
     Response<UserInfo> resp(1, CACHE_INFO);
-    resp = get_info(info.id);
+    resp = get_info_by_uid(info.id);
     info = resp.data;
     return info;
 }
