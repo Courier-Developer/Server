@@ -182,7 +182,6 @@ Serializer FeverRPC::recv_call_and_send(const int &socket_handler) {
     ret.buffer.write(ans.buffer.data(), ans.buffer.size());
     // ! 4. send data
     send_data(socket_handler, ans.buffer.data(), ans.buffer.size());
-    printf("[recvcallandsend] buffer.data() %d", ret.buffer.size());
     return ret;
 }
 
@@ -302,6 +301,7 @@ void Server::s2c() {
             std::cout << "[s2c]认证成功，并注册" << std::endl;
 
             while (1) {
+                threadManager.print();
                 bool online = threadManager.online(uid);
                 if (!online)
                     break;
@@ -347,15 +347,15 @@ void Server::s2c() {
                         if (p.first == PushType::LOGIN) {
                             // TODO
                         } else if (p.first == PushType::LOGOUT) {
-                            // TODO
+                            int user_id = p.second;
+                            printf("GETGETGET %d LOGOUT!\n",user_id);
                         }
                     } else {
                         // 没有通知
                         printf("[%lld]没有通知\n", std::this_thread::get_id());
                         std::this_thread::yield();
                     }
-                    // push::Push p = threadManager.get_push(uid);
-                    // std::cout << "有通知" << p << endl;
+                    puts("[s2c] sleep for two seconds.");
                     std::this_thread::sleep_for(std::chrono::seconds(2));
 
                     // note<int>(new_socket_handler, "push", p);
@@ -412,7 +412,7 @@ void Server::c2s() {
             while (1) {
                 try {
                     recv_call_and_send(new_socket_handler);
-                    printf("[%lld]recv_call_and_send(new_socket_handler);\n",
+                    printf("[c2s][%lld]recv_call_and_send() has ben executed;\n",
                            std::this_thread::get_id());
                 } catch (const std::exception &e) {
                     // 这里会在客户端退出时捕获异常，并进行逻辑处理

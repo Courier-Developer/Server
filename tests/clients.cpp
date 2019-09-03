@@ -21,13 +21,9 @@ Login ret_login_info() {
     return Login{username : "fky", password : "password", ip : "123.1.1.1"};
 }
 
-
-
 int main() {
     FeverRPC::Client rpc("127.0.0.1");
     rpc.call<int>("login", "fky", "password", "123.1.1.1");
-    this_thread::sleep_for(chrono::seconds(2));
-    rpc.call<int>("logout", 1);
 
     thread _thread{[]() {
         FeverRPC::Client _rpc("127.0.0.1");
@@ -37,6 +33,9 @@ int main() {
         _rpc.s2c();
     }};
     thread_guard g(_thread);
+
+    this_thread::sleep_for(chrono::seconds(2));
+    rpc.call<bool>("logout", 1);
 
     this_thread::sleep_for(chrono::seconds(20000));
 }

@@ -5,7 +5,7 @@
  * https://github.com/Courier-Developer/feverrpc
  * 使用TCP/Socket长连接
  * 双向RPC
- * 支持任意长度、类型参数绑定
+ * 
  * 基于Msgpack，可自定义序列化类型
  * Socket支持任意大小传输功能（int)
  * 支持多线程，有多线程调度模块

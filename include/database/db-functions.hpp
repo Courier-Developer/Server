@@ -1,14 +1,14 @@
 #pragma once
 #include "db-classes.hpp"
 #include "pqxx/pqxx"
-#include <feverrpc/threadmanager.hpp>
-#include <iostream>
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
+#include <feverrpc/threadmanager.hpp>
+#include <fstream>
+#include <iostream>
+#include <iterator>
 #include <string>
 #include <vector>
-#include <iterator>
-#include <fstream>
 
 #define DBLOGINFO                                                              \
     "dbname=postgres user=postgres password=example "                          \
@@ -21,6 +21,7 @@
 // https://github.com/Courier-Developer/feverrpc/blob/master/lock.cpp
 // 关注ThreadManager的可以调用的方法，比如查询是否在线
 extern ThreadManager threadManager;
+int create_package(int uid, int groupid, std::string package_name);
 
 void output(pqxx::result &R) {
     for (pqxx::const_result_iterator i = R.begin(); i != R.end(); ++i) {
@@ -65,13 +66,15 @@ int login(std::string username, std::string password, std::string ip) {
             username + "';";
         pqxx::result R = W.exec(sql);
 
-        if (strcmp(R[0][2].c_str(), password.c_str()) == 0){
-            std::string sql_setUp = "update userinfo set ip = '" + ip + "', lastlogintime = now()::timestamp where id = " + R[0][0].c_str() + ";";
+        if (strcmp(R[0][2].c_str(), password.c_str()) == 0) {
+            std::string sql_setUp =
+                "update userinfo set ip = '" + ip +
+                "', lastlogintime = now()::timestamp where id = " +
+                R[0][0].c_str() + ";";
             W.exec(sql_setUp);
             W.commit();
             return 1;
-        }
-        else
+        } else
             return 0;
     } else {
         return -1;
@@ -127,7 +130,7 @@ int register_account(std::string username, std::string password,
         pqxx::work W_select(C);
         pqxx::result R_select = W_select.exec(sql);
         int id = R_select[0][0].as<int>();
-        
+
         //创建两个默认package
         create_package(id, -1, "黑名单");
         create_package(id, 0, "我的好友");
@@ -146,7 +149,8 @@ int register_account(std::string username, std::string password,
  */
 bool logout(int uid) {
     uid = threadManager.get_uid();
-    printf("[db-funcs][logout]%d\n",uid);
+    printf("[db-funcs][logout]%d\n", uid);
+    threadManager.push(uid, PushType::LOGOUT, 1234);
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -155,9 +159,13 @@ bool logout(int uid) {
             std::to_string(uid) + ";";
         pqxx::result R = W.exec(sql);
         W.commit();
+        puts("[db-funcs][logout] execute finished.");
         return 1;
-    } else
+    } else {
+        puts("[db-funcs][logout] execute finished.");
+
         return 0;
+    }
 }
 
 /**
@@ -195,9 +203,9 @@ Response<UserInfo> get_info_by_uid(int uid) {
 
 /**
  * @brief 获取用户的所有信息 by username
- * 
- * @param username 
- * @return Response<UserInfo> 
+ *
+ * @param username
+ * @return Response<UserInfo>
  */
 Response<UserInfo> get_info_by_username(std::string username) {
     int id = is_username_exists(username);
@@ -208,7 +216,6 @@ Response<UserInfo> get_info_by_username(std::string username) {
         Response<UserInfo> resp = get_info_by_uid(id);
         return resp;
     }
-    
 }
 
 /**
@@ -241,7 +248,7 @@ bool update_info(int uid, UserInfo ui) {
 
 /**
  * @brief 获得一个用户的所有好友信息
- * 
+ *
  * @param uid 用户id
  * @return Response<std::vector<Friend>> 包含所有好友信息的vector
  */
@@ -251,7 +258,11 @@ Response<std::vector<Friend>> list_friends(int uid) {
     if (C.is_open()) {
         pqxx::work W(C);
         std::string sql =
-            "select u.id, packageid, u.username, u.createdtime, u.lastlogintime, u.birthday, u.ismale, u.ip, u.nickname, friend.mute, u.signature from friend inner join userinfo u on friend.owner = u.id where friend.owner = " + std::to_string(uid) + " and friend.isagreed = true;";
+            "select u.id, packageid, u.username, u.createdtime, "
+            "u.lastlogintime, u.birthday, u.ismale, u.ip, u.nickname, "
+            "friend.mute, u.signature from friend inner join userinfo u on "
+            "friend.owner = u.id where friend.owner = " +
+            std::to_string(uid) + " and friend.isagreed = true;";
         pqxx::result R = W.exec(sql);
 
         std::vector<Friend> all_friend;
@@ -288,7 +299,14 @@ bool request_friend(int uid, int friend_id) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
-        std::string sql = "insert into friend (owner, friend, packageid, mute, isagreed) values (" + std::to_string(uid) + ", " + std::to_string(friend_id) + ", 0, false, false);\ninsert into friend (owner, friend, packageid, mute, isagreed) values (" + std::to_string(friend_id) + ", " + std::to_string(uid) + ", 0, false, false);";
+        std::string sql = "insert into friend (owner, friend, packageid, mute, "
+                          "isagreed) values (" +
+                          std::to_string(uid) + ", " +
+                          std::to_string(friend_id) +
+                          ", 0, false, false);\ninsert into friend (owner, "
+                          "friend, packageid, mute, isagreed) values (" +
+                          std::to_string(friend_id) + ", " +
+                          std::to_string(uid) + ", 0, false, false);";
         W.exec(sql);
         W.commit();
         return 1;
@@ -341,18 +359,18 @@ bool delete_friend(int uid, int friend_id) {
 
 /**
  * @brief 判断某用户是否已经有这个名字的package，不存在则创建package
- * 
- * @param uid 
- * @param package_name 
+ *
+ * @param uid
+ * @param package_name
  * @return int -1数据库连接失败 否则返回package的id
  */
-int find_package(int uid, std::string package_name)
-{
+int find_package(int uid, std::string package_name) {
     pqxx::connection C(DBLOGINFO);
-    if (C.is_open())
-    {
+    if (C.is_open()) {
         pqxx::work W(C);
-        std::string sql_find = "select packageid from package where package_name = '" + package_name + "' and ownerid = " + std::to_string(uid) + ";";
+        std::string sql_find =
+            "select packageid from package where package_name = '" +
+            package_name + "' and ownerid = " + std::to_string(uid) + ";";
         pqxx::result R = W.exec(sql_find);
         if (R.size() == 0) {
             return create_package(uid, 1, package_name);
@@ -365,13 +383,15 @@ int find_package(int uid, std::string package_name)
 }
 
 /// \brief 修改好友所在群组
-bool change_package(int owner_id, int friend_id, std::string package_name)
-{
+bool change_package(int owner_id, int friend_id, std::string package_name) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
         int package_id = find_package(owner_id, package_name);
-        std::string sql = "update friend set packageid = " + std::to_string(package_id) + " where owner = " + std::to_string(owner_id) + " and friend.friend = " + std::to_string(friend_id) + ";";
+        std::string sql =
+            "update friend set packageid = " + std::to_string(package_id) +
+            " where owner = " + std::to_string(owner_id) +
+            " and friend.friend = " + std::to_string(friend_id) + ";";
         W.exec(sql);
         W.commit();
         return 1;
@@ -511,14 +531,15 @@ Response<std::vector<Friend>> get_group_mumber(int group_id) {
             UserInfo info_as_userInfo = tmp.data;
             Friend info_as_friendInfo;
             info_as_friendInfo.uid = info_as_userInfo.id;
-            //packagename这里不赋值 也没意义！
+            // packagename这里不赋值 也没意义！
             info_as_friendInfo.username = info_as_userInfo.username;
             info_as_friendInfo.createdTime = info_as_userInfo.createdTime;
             info_as_friendInfo.lastLoginTime = info_as_userInfo.lastLoginTime;
             info_as_friendInfo.birthday = info_as_userInfo.birthday;
             info_as_friendInfo.isMale = info_as_userInfo.isMale;
             info_as_friendInfo.nickname = info_as_userInfo.nickname;
-            info_as_friendInfo.isMute = false; //用Friend存储群聊中的好友信息时这一项无意义。
+            info_as_friendInfo.isMute =
+                false; //用Friend存储群聊中的好友信息时这一项无意义。
             info_as_friendInfo.ip = info_as_userInfo.ip;
             friends_in_chatGroup.push_back(info_as_friendInfo);
         }
@@ -568,8 +589,9 @@ bool insert_message(int senderId, int receiverId, MsgType type, bool isToGroup,
         }
 
         std::string message_type_str =
-            type == MsgType::MSGTYPE_TEXT ? "text"
-                                 : type == MsgType::MSGTYPE_FILE ? "file" : "image";
+            type == MsgType::MSGTYPE_TEXT
+                ? "text"
+                : type == MsgType::MSGTYPE_FILE ? "file" : "image";
         std::string is_to_group_str = isToGroup ? "true" : "false";
         std::string sql_istMsg =
             "insert into message (id, sender, receiver, type, createdtime, "
@@ -627,12 +649,9 @@ Response<std::vector<Message>> get_unread_messages(int uid) {
     }
 }
 
-Response<std::vector<Message>> get_all_message(int uid)
-{
-    //TODO;
+Response<std::vector<Message>> get_all_message(int uid) {
+    // TODO;
 }
-
-
 
 /// \brief 从该路径中读取文件
 /// \param file_name 文件名，可以用相对路径
@@ -676,8 +695,7 @@ Response<Message> download_data(int uid, std::string path) {}
 /// 根据path和data将文件存储
 bool upload_data(int uid, std::string path) {}
 
-UserInfo get_my_info()
-{
+UserInfo get_my_info() {
     UserInfo info;
     info.id = threadManager.get_uid();
     Response<UserInfo> resp(1, CACHE_INFO);
@@ -686,69 +704,70 @@ UserInfo get_my_info()
     return info;
 }
 
-std::vector<Friend> get_all_friends_info()
-{
+std::vector<Friend> get_all_friends_info() {
     int owner_id = threadManager.get_uid();
     Response<std::vector<Friend>> resp = list_friends(owner_id);
     std::vector<Friend> friends = resp.data;
     return friends;
 }
 
-std::vector<ChatGroup> get_all_chatGroups_info()
-{
+std::vector<ChatGroup> get_all_chatGroups_info() {
     int owner_id = threadManager.get_uid();
     Response<std::vector<ChatGroup>> resp = list_chat_groups(owner_id);
     std::vector<ChatGroup> chatGroups = resp.data;
     return chatGroups;
 }
 
-//TODO 新建好友分组、更改群组名、删除好友分组
+// TODO 新建好友分组、更改群组名、删除好友分组
 
 /**
  * @brief 新建好友分组
- * 
+ *
  * @param uid 好友id
- * @param groupid 若为1 则表示数据库自动生成 为-1或0则为注册账户时生成的自动黑名单or默认分组
+ * @param groupid 若为1 则表示数据库自动生成
+ * 为-1或0则为注册账户时生成的自动黑名单or默认分组
  * @param package_name 分组的名字
  * @return int 1成功 -1 连接数据库失败
  */
-int create_package(int uid, int groupid, std::string package_name)
-{
+int create_package(int uid, int groupid, std::string package_name) {
     pqxx::connection C(DBLOGINFO);
-    if (C.is_open())
-    {
+    if (C.is_open()) {
         pqxx::work W(C);
 
         int real_groupid;
         if (groupid == -1 || groupid == 0) {
             real_groupid = groupid;
         } else {
-            std::string sql_find_max_groupid = "select max(packageid) from package where ownerid = " + std::to_string(uid) + ";";
+            std::string sql_find_max_groupid =
+                "select max(packageid) from package where ownerid = " +
+                std::to_string(uid) + ";";
             pqxx::result R = W.exec(sql_find_max_groupid);
             real_groupid = R[0][0].as<int>() + 1;
         }
 
-        std::string sql_create = "insert into package (ownerid, packageid, package_name) values (" + std::to_string(uid) + ", " + std::to_string(real_groupid) + ", '" + package_name + "');";
+        std::string sql_create =
+            "insert into package (ownerid, packageid, package_name) values (" +
+            std::to_string(uid) + ", " + std::to_string(real_groupid) + ", '" +
+            package_name + "');";
         W.exec(sql_create);
         W.commit();
         return real_groupid;
-    }
-    else {
+    } else {
         return -1;
     }
 }
 
-//TODO：更改群组名
+// TODO：更改群组名
 
 /**
  * @brief 创建一个群聊并且加入用户
- * 
- * @param chatGroupName 
- * @param members 
- * @return int 
+ *
+ * @param chatGroupName
+ * @param members
+ * @return int
  */
-int create_chatGroup_and_invite_friends(std::string chatGroupName, vector<int> members)
-{
+int create_chatGroup_and_invite_friends(std::string chatGroupName,
+                                        std::vector<int> members) {
     int owner_id = threadManager.get_uid();
 
     ChatGroup tmp;
@@ -756,10 +775,8 @@ int create_chatGroup_and_invite_friends(std::string chatGroupName, vector<int> m
     tmp = resp.data;
     int chatGroup_id = tmp.id;
 
-    for (int i = 0; i < members.size() ; ++i)
-    {
+    for (int i = 0; i < members.size(); ++i) {
         join_chatGroup(members[i], chatGroup_id);
     }
     return chatGroup_id;
 }
-

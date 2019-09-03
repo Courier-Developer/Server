@@ -34,7 +34,7 @@ MSGPACK_ADD_ENUM(PushType);
 class UserStatus {
 
   public:
-    const thread::id thread_id;
+    const std::thread::id thread_id;
     int socket_handler;
     int count;
     queue<std::pair<PushType, Friend>> friend_queue;
@@ -129,17 +129,17 @@ class ThreadManager {
         print();
         return true;
     }
-    bool push(int uid, PushType pt, Friend &f) {
+    bool push(int uid, PushType pt, Friend f) {
         std::lock_guard<std::mutex> guard(_mtx);
         _status[uid].friend_queue.push(std::make_pair(pt, f));
         return true;
     }
-    bool push(int uid, PushType pt, Message &m) {
+    bool push(int uid, PushType pt, Message m) {
         std::lock_guard<std::mutex> guard(_mtx);
         _status[uid].message_queue.push(std::make_pair(pt, m));
         return true;
     }
-    bool push(int uid, PushType pt, ChatGroup &cg) {
+    bool push(int uid, PushType pt, ChatGroup cg) {
         std::lock_guard<std::mutex> guard(_mtx);
         _status[uid].group_queue.push(std::make_pair(pt, cg));
         return true;
@@ -196,14 +196,14 @@ class ThreadManager {
     std::pair<PushType, ChatGroup> get_push_group(int uid) {
         std::lock_guard<std::mutex> guard(_mtx);
         auto ret = _status[uid].group_queue.front();
-        _status[uid].message_queue.pop();
+        _status[uid].group_queue.pop();
         return ret;
     }
 
     std::pair<PushType, int> get_push_status(int uid) {
         std::lock_guard<std::mutex> guard(_mtx);
         auto ret = _status[uid].status_queue.front();
-        _status[uid].message_queue.pop();
+        _status[uid].status_queue.pop();
         return ret;
     }
 
@@ -222,6 +222,10 @@ class ThreadManager {
         for (auto elem : _status) {
             cout << "    " << elem.first << " " << elem.second.thread_id << "--"
                  << elem.second.socket_handler << "\n";
+            cout <<"\t\tfriend_queue:"<<elem.second.friend_queue.size()<<endl;
+            cout <<"\t\tmessage_queue:"<<elem.second.message_queue.size()<<endl;
+            cout <<"\t\tgroup_queue:"<<elem.second.group_queue.size()<<endl;
+            cout <<"\t\tstatus_queue:"<<elem.second.status_queue.size()<<endl;
         }
         cout << "}\n";
     }
