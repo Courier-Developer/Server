@@ -758,6 +758,23 @@ int create_package(int uid, int groupid, std::string package_name) {
 }
 
 // TODO：更改群组名
+bool change_name_of_package(int uid, int package_id, std::string package_name) 
+{
+    pqxx::connection C(DBLOGINFO);
+    if (C.is_open())
+    {
+        pqxx::work W(C);
+        std::string sql = "update package set package_name = '" + package_name + "' where ownerid = " + std::to_string(uid) + " and packageid = " + std::to_string(package_id) + ";";
+        W.exec(sql);
+        W.commit();
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+    
+}
 
 /**
  * @brief 创建一个群聊并且加入用户

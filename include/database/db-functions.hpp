@@ -217,6 +217,8 @@ int create_package(int uid, int groupid, std::string package_name);
 
 // TODO：更改群组名
 
+bool change_name_of_package(int uid, int package_id, std::string package_name);
+
 /**
  * @brief 创建一个群聊并且加入用户
  *
