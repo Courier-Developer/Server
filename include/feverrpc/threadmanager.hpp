@@ -48,8 +48,7 @@ class UserStatus {
         : count(0), thread_id(std::this_thread::get_id()), socket_handler(-1){};
 };
 
-// 用于维护在线状态，用户对应的线程号, 心跳count，
-// 消息队列，采用互斥锁解决竞争问题。
+/// \brief 用于维护在线状态，用户对应的线程号, 心跳count，消息队列，采用互斥锁解决竞争问题。
 class ThreadManager {
     map<int, UserStatus> _status;
     map<std::thread::id, int> _threads;
@@ -57,18 +56,23 @@ class ThreadManager {
     static const int COUNT_LIMIT = 30;
 
   public:
+    
+    /// \brief 注册对应线程的uid，用于保证数据库操作代码能够获取uid
     void reg_thread(int uid) {
         std::lock_guard<std::mutex> guard(_mtx);
         _threads[std::this_thread::get_id()] = uid;
     }
+    /// \brief 获得自己线程的uid，但首先保证注册过
     int get_uid() {
         std::lock_guard<std::mutex> guard(_mtx);
         return _threads[std::this_thread::get_id()];
     }
+    /// \brief 注销一个线程对应的uid，与 `reg_thread` 互斥
     bool unreg_thread() {
         std::lock_guard<std::mutex> guard(_mtx);
         return _threads.erase(std::this_thread::get_id());
     }
+    /// \brief 判断一个用户是否在线
     bool online(int uid) {
         std::lock_guard<std::mutex> guard(_mtx);
         if (_status.count(uid) <= 0) {
@@ -81,6 +85,7 @@ class ThreadManager {
         }
         return true;
     }
+    /// \brief 判断一个用户是否被强制下线了，只有 `FeverRPC` 会使用它
     bool force_logout(int uid) {
         // 是否被强制下线，在确保曾经login情况下使用
         std::lock_guard<std::mutex> guard(_mtx);
@@ -90,6 +95,7 @@ class ThreadManager {
         }
         return false;
     }
+    /// \brief 注册一个新的用户-线程等信息，`FeverRPC` 使用，并且能够挤下已在线的同一用户
     bool reg(int uid, const int socket_handler,
              thread::id tid = std::this_thread::get_id()) {
         // register
@@ -114,6 +120,8 @@ class ThreadManager {
         print();
         return true;
     }
+
+    /// \brief 注销，与 `reg` 对应
     bool unreg(int uid) {
         std::lock_guard<std::mutex> guard(_mtx);
         if (_status[uid].socket_handler >= 0) {
@@ -129,27 +137,45 @@ class ThreadManager {
         print();
         return true;
     }
+    /// \brief 向客户端推送有关好友的即时消息
+    /// \param uid
+    /// \param PushType pt: PushType::Friend_xxxx 是可以使用的
+    /// \param Friend f  那个Friend
     bool push(int uid, PushType pt, Friend f) {
         std::lock_guard<std::mutex> guard(_mtx);
         _status[uid].friend_queue.push(std::make_pair(pt, f));
         return true;
     }
+    /// \brief 向客户端推送即时消息
+    /// \param uid
+    /// \param PushType pt: PushType::Message 是可以使用的
+    /// \param Message m  对应Message
     bool push(int uid, PushType pt, Message m) {
         std::lock_guard<std::mutex> guard(_mtx);
         _status[uid].message_queue.push(std::make_pair(pt, m));
         return true;
     }
+    /// \brief 向客户端推送有关分组即时消息
+    /// \param uid
+    /// \param PushType pt: PushType::Group_ADDED 是可以使用的
+    /// \param ChatGroup cg 
     bool push(int uid, PushType pt, ChatGroup cg) {
         std::lock_guard<std::mutex> guard(_mtx);
         _status[uid].group_queue.push(std::make_pair(pt, cg));
         return true;
     }
+    /// \brief 向客户端推送有关登录/登出即时消息
+    /// \param uid
+    /// \param PushType pt: PushType::LOGIN PushType::LOGOUT 是可以使用的
+    /// \param int user_id 对方的uid
     bool push(int uid, PushType pt, int user_id) {
         std::lock_guard<std::mutex> guard(_mtx);
         _status[uid].status_queue.push(std::make_pair(pt, user_id));
         return true;
     }
-    // tp: 1 - friend_queue, 2 - message_queue, 3 - group_queue;
+    /// \brief 查看相应队列是否有推送
+    /// FeverRPC使用
+    // tp: 1 - friend_queue, 2 - message_queue, 3 - group_queue, 4 - status_queue
     bool have_push(int uid, int tp) {
         if (!online(uid))
             return false;
@@ -180,26 +206,32 @@ class ThreadManager {
 
         return false;
     }
+    /// \brief 获得一个Friend相关的Push，
+    /// FerverRPC使用
     std::pair<PushType, Friend> get_push_friend(int uid) {
         std::lock_guard<std::mutex> guard(_mtx);
         auto ret = _status[uid].friend_queue.front();
         _status[uid].friend_queue.pop();
         return ret;
     }
+    /// \brief 获得一个Message相关的Push，
+    /// FerverRPC使用
     std::pair<PushType, Message> get_push_message(int uid) {
         std::lock_guard<std::mutex> guard(_mtx);
         auto ret = _status[uid].message_queue.front();
         _status[uid].message_queue.pop();
         return ret;
     }
-
+    /// \brief 获得一个Group相关的Push，
+    /// FerverRPC使用
     std::pair<PushType, ChatGroup> get_push_group(int uid) {
         std::lock_guard<std::mutex> guard(_mtx);
         auto ret = _status[uid].group_queue.front();
         _status[uid].group_queue.pop();
         return ret;
     }
-
+    /// \brief 获得一个Login/Logout相关的Push，
+    /// FerverRPC使用
     std::pair<PushType, int> get_push_status(int uid) {
         std::lock_guard<std::mutex> guard(_mtx);
         auto ret = _status[uid].status_queue.front();
@@ -231,6 +263,8 @@ class ThreadManager {
     }
 };
 
+/// \brief RAII线程守护
+/// 使用RAII的方式保证线程一定会在最终join
 class thread_guard {
     std::thread &t;
 
