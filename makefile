@@ -1,10 +1,11 @@
 INCLUDE=-Iinclude
+MSGPK=-I/Users/alanyoung/Downloads/msgpack-c-master/include
 
 %.o:src/%.cpp
-	g++ -c $< ${INCLUDE} --std=c++17 
+	g++ -c $< ${INCLUDE} $(MSGPK) --std=c++17 
 
 %.o:tests/%.cpp
-	g++ -c $< ${INCLUDE} --std=c++17 
+	g++ -c $< ${INCLUDE} $(MSGPK) --std=c++17 
 
 all: main client
 
