@@ -12,7 +12,7 @@
 
 #define DBLOGINFO                                                              \
     "dbname=postgres user=postgres password=example "                          \
-    "hostaddr=59.110.233.235 port=5432"
+    "hostaddr=127.0.0.1 port=5432"
 #define CONNECTION_ERROR "connection erroe"
 #define NOT_FOUND_ERROR "not found"
 #define SUCCESS_INFO "success"
@@ -73,7 +73,15 @@ int login(std::string username, std::string password, std::string ip) {
                 R[0][0].c_str() + ";";
             W.exec(sql_setUp);
             W.commit();
-            return R[0][0].as<int>();
+            int uid = R[0][0].as<int>();
+            // send push
+            for (auto f : list_friends(uid)) {
+                if (threadManager.online(f.uid)) {
+                    threadManager.push(f.uid, PushType::LOGIN, uid);
+                }
+            }
+
+            return uid;
         } else {
             return -1;
             // 不存在该用户 return -1
@@ -174,6 +182,12 @@ bool logout(int uid) {
         pqxx::result R = W.exec(sql);
         W.commit();
         puts("[db-funcs][logout] execute finished.");
+
+        for (auto f : list_friends(uid)) {
+            if (threadManager.online(f.uid)) {
+                threadManager.push(f.uid, PushType::LOGOUT, uid);
+            }
+        }
 
         return 1;
     } else {
@@ -732,9 +746,9 @@ std::vector<Message> get_all_message(int uid) {
             "content from message where (receiver = " +
             std::to_string(uid) +
             " and istogroup = false) or (receiver in (select groupid from "
-            "user_in_group where id = " +
+            "user_in_group where user_in_group.userid = " +
             std::to_string(uid) +
-            ") and istogroup = true) or sender = " + std::to_string(uid) + ";";
+            ") and istogroup = true) or (sender = " + std::to_string(uid) + ");";
         pqxx::result R = W_getMsg.exec(sql_getMsg);
         std::vector<Message> messages;
         for (pqxx::result::const_iterator row = R.begin(); row != R.end();
@@ -746,9 +760,10 @@ std::vector<Message> get_all_message(int uid) {
             tmp.type = row[3].as<int>();
             tmp.createdTime = row[4].c_str();
             tmp.editedTime = tmp.createdTime;
-            tmp.isToGroup = strcmp(row[5].c_str(), "true") == 0 ? 1 : 0;
+            tmp.isToGroup = row[5].as<bool>();
             tmp.content = row[6].c_str();
             messages.push_back(tmp);
+            printf("[db-funcs][get_all_messages] %d\n",row[5].as<bool>());
         }
         Response<std::vector<Message>> resp(1, SUCCESS_INFO, messages);
         return resp.data;
