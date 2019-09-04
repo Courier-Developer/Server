@@ -279,7 +279,7 @@ Response<std::vector<Friend>> list_friends(int uid) {
     if (C.is_open()) {
         pqxx::work W(C);
         std::string sql =
-            "select u.id, packageid, u.username, u.createdtime, "
+            "select friend.friend, packageid, u.username, u.createdtime, "
             "u.lastlogintime, u.birthday, u.ismale, u.ip, u.nickname, "
             "friend.mute, u.signature from friend inner join userinfo u on "
             "friend.owner = u.id where friend.owner = " +
@@ -793,7 +793,7 @@ void save_file_(string file_name, std::vector<char> data) {
 /// TODO incomplete definition
 /// 根据path取出存储在文件系统里的文件
 Response<Message> download_data(int uid, std::string path) {
-    
+
 }
 
 /// \brief 上传文件
