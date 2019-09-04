@@ -137,6 +137,7 @@ class ThreadManager {
         print();
         return true;
     }
+    
     /// \brief 向客户端推送有关好友的即时消息
     /// \param uid
     /// \param PushType pt: PushType::Friend_xxxx 是可以使用的
@@ -146,6 +147,7 @@ class ThreadManager {
         _status[uid].friend_queue.push(std::make_pair(pt, f));
         return true;
     }
+
     /// \brief 向客户端推送即时消息
     /// \param uid
     /// \param PushType pt: PushType::Message 是可以使用的
@@ -155,6 +157,7 @@ class ThreadManager {
         _status[uid].message_queue.push(std::make_pair(pt, m));
         return true;
     }
+
     /// \brief 向客户端推送有关分组即时消息
     /// \param uid
     /// \param PushType pt: PushType::Group_ADDED 是可以使用的
@@ -164,6 +167,7 @@ class ThreadManager {
         _status[uid].group_queue.push(std::make_pair(pt, cg));
         return true;
     }
+
     /// \brief 向客户端推送有关登录/登出即时消息
     /// \param uid
     /// \param PushType pt: PushType::LOGIN PushType::LOGOUT 是可以使用的
