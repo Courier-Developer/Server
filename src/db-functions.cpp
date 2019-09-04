@@ -685,13 +685,7 @@ std::vector<Message> get_unread_messages(int uid) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W_getMsg(C);
-        std::string sql_getMsg =
-            "select id, sender, receiver, type, createdtime, istogroup, "
-            "content from message where receiver = " +
-            std::to_string(uid) +
-            " and message.createdtime > (select lastlogintime from userinfo "
-            "where id = " +
-            std::to_string(uid) + ");";
+        std::string sql_getMsg ="select id, sender, receiver, type, createdtime, istogroup, content from message where ((receiver = " + std::to_string(uid) + " and istogroup = false) or (receiver in (select groupid from user_in_group where id = " + std::to_string(uid) + ") and istogroup = true) or sender = " + std::to_string(uid) + ") and message.createdtime > (select lastlogintime from userinfo where id = " + std::to_string(uid) + ");";
         pqxx::result R = W_getMsg.exec(sql_getMsg);
         std::vector<Message> messages;
         for (pqxx::result::const_iterator row = R.begin(); row != R.end();
@@ -723,10 +717,14 @@ std::vector<Message> get_all_message(int uid) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W_getMsg(C);
+<<<<<<< HEAD
         std::string sql_getMsg =
             "select id, sender, receiver, type, createdtime, istogroup, "
             "content from message where receiver = " +
             std::to_string(uid) + " or sender = " + std::to_string(uid) + ";";
+=======
+        std::string sql_getMsg = "select id, sender, receiver, type, createdtime, istogroup, content from message where (receiver = " + std::to_string(uid) + " and istogroup = false) or (receiver in (select groupid from user_in_group where id = " + std::to_string(uid) + ") and istogroup = true) or sender = " + std::to_string(uid) + ";";
+>>>>>>> a7cc8fbcde067971d12cf5dd7368ca65b6a68cc1
         pqxx::result R = W_getMsg.exec(sql_getMsg);
         std::vector<Message> messages;
         for (pqxx::result::const_iterator row = R.begin(); row != R.end();

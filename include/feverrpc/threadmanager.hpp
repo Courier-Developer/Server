@@ -258,9 +258,13 @@ class ThreadManager {
         for (auto elem : _status) {
             cout << "    " << elem.first << " " << elem.second.thread_id << "--"
                  << elem.second.socket_handler << "\n";
+            if(elem.second.friend_queue.size())
             cout <<"\t\tfriend_queue:"<<elem.second.friend_queue.size()<<endl;
+            if(elem.second.message_queue.size())
             cout <<"\t\tmessage_queue:"<<elem.second.message_queue.size()<<endl;
+            if(elem.second.group_queue.size())
             cout <<"\t\tgroup_queue:"<<elem.second.group_queue.size()<<endl;
+            if(elem.second.status_queue.size())
             cout <<"\t\tstatus_queue:"<<elem.second.status_queue.size()<<endl;
         }
         cout << "}\n";

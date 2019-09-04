@@ -377,7 +377,7 @@ void Server::s2c() {
                         printf("[%lld]没有通知\n", std::this_thread::get_id());
                         std::this_thread::yield();
                     }
-                    puts("[s2c] sleep for two seconds.");
+                    // puts("[s2c] sleep for two seconds.");
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
                     // note<int>(new_socket_handler, "push", p);
