@@ -717,14 +717,7 @@ std::vector<Message> get_all_message(int uid) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W_getMsg(C);
-<<<<<<< HEAD
-        std::string sql_getMsg =
-            "select id, sender, receiver, type, createdtime, istogroup, "
-            "content from message where receiver = " +
-            std::to_string(uid) + " or sender = " + std::to_string(uid) + ";";
-=======
         std::string sql_getMsg = "select id, sender, receiver, type, createdtime, istogroup, content from message where (receiver = " + std::to_string(uid) + " and istogroup = false) or (receiver in (select groupid from user_in_group where id = " + std::to_string(uid) + ") and istogroup = true) or sender = " + std::to_string(uid) + ";";
->>>>>>> a7cc8fbcde067971d12cf5dd7368ca65b6a68cc1
         pqxx::result R = W_getMsg.exec(sql_getMsg);
         std::vector<Message> messages;
         for (pqxx::result::const_iterator row = R.begin(); row != R.end();
@@ -756,6 +749,7 @@ std::vector<Message> get_all_message(int uid) {
 /// \param file_name 文件名，可以用相对路径
 /// \return std::vector<char> 存放数据
 std::vector<char> read_file_(string file_name) {
+    file_name = "assets/" + file_name;
     std::ifstream file(file_name, std::ios::binary);
     // Stop eating new lines in binary mode!!!
     file.unsetf(std::ios::skipws);
@@ -780,6 +774,7 @@ std::vector<char> read_file_(string file_name) {
 /// \param data 数据
 /// \return Void
 int save_file_(string file_name, std::vector<char> data) {
+    file_name = "assets/" + file_name;
     std::ofstream file(file_name, std::ios::out | std::ios::binary);
     file.write((const char *)&data[0], data.size());
     file.close();
@@ -907,6 +902,8 @@ int send_message(int senderid, int receiverid, MsgType type, bool istoGroup,
         std::vector<Friend> friends_need_to_send;
         friends_need_to_send = get_group_mumber(receiverid);
         for (auto f : friends_need_to_send) {
+            if(f.uid == senderid)
+                continue;
             if (threadManager.online(f.uid)) {
                 threadManager.push(f.uid, PushType::MESSAGE, msg_need_to_send);
             }
