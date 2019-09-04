@@ -1,5 +1,5 @@
-#pragma once
-#include "db-classes.hpp"
+#include "database/db-functions.hpp"
+#include "database/db-classes.hpp"
 #include "pqxx/pqxx"
 #include <cstdio>
 #include <cstdlib>
@@ -21,7 +21,6 @@
 // https://github.com/Courier-Developer/feverrpc/blob/master/lock.cpp
 // 关注ThreadManager的可以调用的方法，比如查询是否在线
 extern ThreadManager threadManager;
-int create_package(int uid, int groupid, std::string package_name);
 
 void output(pqxx::result &R) {
     for (pqxx::const_result_iterator i = R.begin(); i != R.end(); ++i) {
@@ -57,28 +56,31 @@ int set_timezone() {
  * @return int 0-密码错误 1-密码正确 -1-数据库连接错误
  */
 int login(std::string username, std::string password, std::string ip) {
-    // TODO
+    // TODO 会崩溃
+    puts("[db-funcs][login] start");
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
-        std::string sql =
-            "select id,username,password from userinfo where username='" +
-            username + "';";
+        std::string sql = "select id from userinfo where username='" +
+                          username + "' and password = '" + password + "';";
         pqxx::result R = W.exec(sql);
-
-        if (strcmp(R[0][2].c_str(), password.c_str()) == 0) {
+        if (R.size()) {
+            // 存在该用户 return uid
+            puts("[db-funcs][login] password compare success.");
             std::string sql_setUp =
                 "update userinfo set ip = '" + ip +
                 "', lastlogintime = now()::timestamp where id = " +
                 R[0][0].c_str() + ";";
             W.exec(sql_setUp);
             W.commit();
-            return 1;
-        } else
-            return 0;
-    } else {
-        return -1;
-    }
+            return R[0][0].as<int>();
+        } else {
+            return -1;
+            // 不存在该用户 return -1
+        }
+    } else
+        puts("[db-funcs][login] will return -2.");
+    return -2;
 }
 
 /**
@@ -153,7 +155,7 @@ bool logout(int uid) {
     threadManager.push(uid, PushType::LOGOUT, 1234);
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
-        //TODO 通知所有好友我下线了
+        // TODO 通知所有好友我下线了
         pqxx::work W(C);
         std::string sql =
             "update userinfo set lastlogintime = now() where id = " +
@@ -161,14 +163,13 @@ bool logout(int uid) {
         pqxx::result R = W.exec(sql);
         W.commit();
         puts("[db-funcs][logout] execute finished.");
-        
+
         return 1;
     } else {
         puts("[db-funcs][logout] execute finished.");
 
         return 0;
     }
-
 }
 
 /**
@@ -243,7 +244,7 @@ bool update_info(int uid, UserInfo ui) {
                           ", nickname = '" + ui.nickname + "' where id = '" +
                           std::to_string(uid) + "';";
         pqxx::result R = W.exec(sql);
-        //TODO 通知该用户所有好友
+        // TODO 通知该用户所有好友
         return 1;
     } else {
         return 0;
@@ -315,13 +316,14 @@ bool request_friend(int uid, int friend_id) {
         W.commit();
 
         UserInfo senderInfo = get_info_by_uid(uid).data;
-        
+
         Friend senderInfo_as_Friend;
         senderInfo_as_Friend.uid = uid;
         senderInfo_as_Friend.username = senderInfo.username;
         senderInfo_as_Friend.nickname = senderInfo.nickname;
         //注意：只有这三个字段有意义
-        threadManager.push(friend_id, PushType::FRIEND_WANGTED, senderInfo_as_Friend);
+        threadManager.push(friend_id, PushType::FRIEND_WANGTED,
+                           senderInfo_as_Friend);
         return 1;
     } else {
         return 0;
@@ -345,7 +347,7 @@ bool make_friend(int uid, int friend_id) {
             " and friend.friend = " + std::to_string(uid) + ";";
         W.exec(sql);
         W.commit();
-        //TODO 需要通知对方同意 或者 对方下次上线才能看到
+        // TODO 需要通知对方同意 或者 对方下次上线才能看到
         return 1;
     } else {
         return 0;
@@ -587,7 +589,8 @@ bool leave_group(int uid, int group_id) {
 }
 
 /// \brief 插入一条消息，创建、修改时间均为now 自动生成消息id
-Response<Message> insert_message(int senderId, int receiverId, MsgType type, bool isToGroup,std::string content) {
+Response<Message> insert_message(int senderId, int receiverId, MsgType type,
+                                 bool isToGroup, std::string content) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -622,7 +625,9 @@ Response<Message> insert_message(int senderId, int receiverId, MsgType type, boo
         msg.type = type;
 
         pqxx::work W_findtime(C);
-        std::string sql_findtime = "select createdtime from message where id = " + std::to_string(id) + ";";
+        std::string sql_findtime =
+            "select createdtime from message where id = " + std::to_string(id) +
+            ";";
         pqxx::result R_findtime = W_findtime.exec(sql_findtime);
         std::string createtime = R_findtime[0][0].c_str();
 
@@ -790,22 +795,20 @@ int create_package(int uid, int groupid, std::string package_name) {
 }
 
 // TODO：更改群组名
-bool change_name_of_package(int uid, int package_id, std::string package_name) 
-{
+bool change_name_of_package(int uid, int package_id, std::string package_name) {
     pqxx::connection C(DBLOGINFO);
-    if (C.is_open())
-    {
+    if (C.is_open()) {
         pqxx::work W(C);
-        std::string sql = "update package set package_name = '" + package_name + "' where ownerid = " + std::to_string(uid) + " and packageid = " + std::to_string(package_id) + ";";
+        std::string sql = "update package set package_name = '" + package_name +
+                          "' where ownerid = " + std::to_string(uid) +
+                          " and packageid = " + std::to_string(package_id) +
+                          ";";
         W.exec(sql);
         W.commit();
         return 1;
-    }
-    else
-    {
+    } else {
         return 0;
     }
-    
 }
 
 /**
@@ -830,8 +833,8 @@ int create_chatGroup_and_invite_friends(std::string chatGroupName,
     return chatGroup_id;
 }
 
-int send_message (int senderid, int receiverid, MsgType type, bool istoGroup, std::string content)
-{
+int send_message(int senderid, int receiverid, MsgType type, bool istoGroup,
+                 std::string content) {
     Response<Message> tmp(1, CACHE_INFO);
     tmp = insert_message(senderid, receiverid, type, istoGroup, content);
     Message msg_need_to_send = tmp.data;
@@ -843,8 +846,7 @@ int send_message (int senderid, int receiverid, MsgType type, bool istoGroup, st
     } else {
         std::vector<Friend> friends_need_to_send;
         friends_need_to_send = get_group_mumber(receiverid).data;
-        for(auto f:friends_need_to_send)
-        {
+        for (auto f : friends_need_to_send) {
             if (threadManager.online(f.uid)) {
                 threadManager.push(f.uid, PushType::MESSAGE, msg_need_to_send);
             }

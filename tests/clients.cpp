@@ -23,16 +23,16 @@ Login ret_login_info() {
 
 int main() {
     FeverRPC::Client rpc("127.0.0.1");
-    rpc.call<int>("login", "fky", "password", "123.1.1.1");
-
-    thread _thread{[]() {
-        FeverRPC::Client _rpc("127.0.0.1");
-        _rpc.bind("login", ret_login_info);
-        _rpc.bind("deal_friend_push", deal_push_friend);
-        _rpc.bind("deal_message_push", deal_message_push);
-        _rpc.s2c();
-    }};
-    thread_guard g(_thread);
+    rpc.call<int>("register", "fky", "password");
+    // rpc.call<int>("notExist",1);
+    // thread _thread{[]() {
+    //     FeverRPC::Client _rpc("127.0.0.1");
+    //     _rpc.bind("login", ret_login_info);
+    //     _rpc.bind("deal_friend_push", deal_push_friend);
+    //     _rpc.bind("deal_message_push", deal_message_push);
+    //     _rpc.s2c();
+    // }};
+    // thread_guard g(_thread);
 
     this_thread::sleep_for(chrono::seconds(2));
     rpc.call<bool>("logout", 1);
