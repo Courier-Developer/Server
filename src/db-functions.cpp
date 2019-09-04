@@ -760,39 +760,41 @@ Response<std::vector<Message>> get_all_message(int uid) {
 /// \brief 从该路径中读取文件
 /// \param file_name 文件名，可以用相对路径
 /// \return std::vector<char> 存放数据
-// std::vector<char> read_file(string file_name) {
-//     std::ifstream file(file_name, std::ios::binary);
-//     // Stop eating new lines in binary mode!!!
-//     file.unsetf(std::ios::skipws);
+std::vector<char> read_file(string file_name) {
+    std::ifstream file(file_name, std::ios::binary);
+    // Stop eating new lines in binary mode!!!
+    file.unsetf(std::ios::skipws);
 
-//     std::streampos fileSize;
+    std::streampos fileSize;
 
-//     file.seekg(0, std::ios::end);
-//     fileSize = file.tellg();
-//     file.seekg(0, std::ios::beg);
+    file.seekg(0, std::ios::end);
+    fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
 
-//     std::vector<char> vec;
-//     vec.reserve(fileSize);
+    std::vector<char> vec;
+    vec.reserve(fileSize);
 
-//     vec.insert(vec.begin(), std::istream_iterator<char>(file),
-//                std::istream_iterator<char>());
-//     file.close();
-//     return vec;
-// }
+    vec.insert(vec.begin(), std::istream_iterator<char>(file),
+               std::istream_iterator<char>());
+    file.close();
+    return vec;
+}
 
 /// \brief 向该路径存放文件
 /// \param file_name 文件名，与 read_file 中路径一致
 /// \param data 数据
 /// \return Void
-// void save_file(string file_name, std::vector<char> &data) {
-//     std::ofstream file(file_name, std::ios::out | std::ios::binary);
-//     file.write((const char *)&data[0], data.size());
-//     file.close();
-// }
+void save_file(string file_name, std::vector<char> &data) {
+    std::ofstream file(file_name, std::ios::out | std::ios::binary);
+    file.write((const char *)&data[0], data.size());
+    file.close();
+}
 /// \brief 获得文件信息内容
 /// TODO incomplete definition
 /// 根据path取出存储在文件系统里的文件
-Response<Message> download_data(int uid, std::string path) {}
+Response<Message> download_data(int uid, std::string path) {
+    
+}
 
 /// \brief 上传文件
 /// TODO incomplete definition
