@@ -432,6 +432,28 @@ bool change_package(int owner_id, int friend_id, std::string package_name) {
         return 0;
 }
 
+///删除群组
+bool delete_package (int ownerId, int packageId)
+{
+    pqxx::connection C(DBLOGINFO);
+    if (C.is_open())
+    {
+        pqxx::work W(C);
+        std::string sql_changeFriendsToDefaultPackage = "update friend set packageid = 1 where packageid = " + std::to_string(packageId) + " and owner = " + std::to_string(ownerId) + ";";
+        W.exec(sql_changeFriendsToDefaultPackage);
+        std::string sql_deletePackage = "delete from package where owner = " + std::to_string(ownerId) + " and packageid = " + std::to_string(packageId) + ";";
+        W.exec(sql_deletePackage);
+        W.commit();
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+    
+}
+
+
 /// \brief 根据名字搜索群聊
 ///没改！！！别乱用
 Response<std::vector<ChatGroup>> search_group(std::string group_name) {
@@ -863,8 +885,7 @@ bool change_name_of_package(int uid, int package_id, std::string package_name) {
  * @param members
  * @return int
  */
-int create_chatGroup_and_invite_friends(std::string chatGroupName,
-                                        std::vector<int> members) {
+int create_chatGroup_and_invite_friends(std::string chatGroupName,std::vector<int> members) {
     int owner_id = threadManager.get_uid();
 
     ChatGroup tmp;

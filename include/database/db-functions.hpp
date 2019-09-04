@@ -120,6 +120,9 @@ int find_package(int uid, std::string package_name);
 /// \brief 修改好友所在分组
 bool change_package(int owner_id, int friend_id, std::string package_name);
 
+///删除群组
+bool delete_package (int ownerId, int packageId);
+
 /// \brief 根据名字搜索群聊
 ///没改！！！别乱用
 Response<std::vector<ChatGroup>> search_group(std::string group_name);
