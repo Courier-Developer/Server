@@ -836,6 +836,8 @@ std::vector<ChatGroup> get_all_chatGroups_info() {
  * @return int 1成功 -1 连接数据库失败
  */
 int create_package(int uid, int groupid, std::string package_name) {
+    puts("[db-funcs][create_packege] start");
+    std::cout<<uid<<" "<<groupid<<" "<<package_name<<std::endl;
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
