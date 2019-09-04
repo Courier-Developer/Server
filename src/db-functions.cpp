@@ -784,7 +784,7 @@ std::vector<char> read_file_(string file_name) {
 /// \param file_name 文件名，与 read_file 中路径一致
 /// \param data 数据
 /// \return Void
-void save_file_(string file_name, std::vector<char> data) {
+int save_file_(string file_name, std::vector<char> data) {
     std::ofstream file(file_name, std::ios::out | std::ios::binary);
     file.write((const char *)&data[0], data.size());
     file.close();
