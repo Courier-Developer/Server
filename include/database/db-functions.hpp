@@ -239,3 +239,11 @@ int create_chatGroup_and_invite_friends(std::string chatGroupName,std::vector<in
  * @return int 
  */
 int send_message (int senderid, int receiverid, MsgType type, bool istoGroup, std::string content);
+
+/**
+ * @brief Get the chatGroupWithMembers object
+ * 
+ * @param chatGroupId 
+ * @return Response<chatGroup_with_members> 
+ */
+Response<chatGroup_with_members> get_chatGroupWithMembers (int chatGroupId);
