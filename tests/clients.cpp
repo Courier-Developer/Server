@@ -23,7 +23,7 @@ Login ret_login_info() {
 
 int main() {
     FeverRPC::Client rpc("127.0.0.1");
-    rpc.call<int>("register", "fky", "password");
+    rpc.call<int>("register", "fky", "password","nickname",true);
     // rpc.call<int>("notExist",1);
     // thread _thread{[]() {
     //     FeverRPC::Client _rpc("127.0.0.1");

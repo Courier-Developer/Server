@@ -90,16 +90,31 @@ int login(std::string username, std::string password, std::string ip) {
  * @return int 正数：存在并返回此用户id 0未重复 -1数据库连接失败
  */
 int is_username_exists(std::string username) {
+    puts("[db-funcs][is_username_exits] enter");
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
+        puts("[db-funcs][is_username_exits] connect");
+
         pqxx::work W(C);
         std::string sql =
             "select id from userinfo where username='" + username + "';";
         pqxx::result R = W.exec(sql);
+        puts("[db-funcs][is_username_exits] executed");
+
         if (R.size() != 0) {
-            return R[0][0].as<int>();
-        } else
+
+            puts("[db-funcs][is_username_exits] return R");
+            if (R[0].size() != 1) {
+                puts("[db-funcs][is_username_exits] error");
+            }
+            int ret = R[0][0].as<int>();
+            puts("[db-funcs][is_username_exits] ger return value");
+
+            return ret;
+        } else {
             return 0;
+            puts("[db-funcs][is_username_exits] return 0");
+        }
     } else {
         return -1;
     }
@@ -116,7 +131,9 @@ int is_username_exists(std::string username) {
  */
 int register_account(std::string username, std::string password,
                      std::string nickname, bool ismale) {
-    if (is_username_exists(username) == 1) {
+    puts("[db-funcs][regeister] enter");
+    if (is_username_exists(username) > 0) {
+        puts("[db-funcs][regeister] username exist! return!");
         return -2;
     }
     pqxx::connection C(DBLOGINFO);
@@ -213,7 +230,7 @@ Response<UserInfo> get_info_by_uid(int uid) {
  */
 Response<UserInfo> get_info_by_username(std::string username) {
     int id = is_username_exists(username);
-    if (id == 0) {
+    if (id < 0) {
         Response<UserInfo> resp(0, NOT_FOUND_ERROR);
         return resp;
     } else {
