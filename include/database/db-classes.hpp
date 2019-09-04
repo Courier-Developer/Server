@@ -12,7 +12,7 @@ template <typename T> class Response {
     Response(bool success, std::string msg, T data)
         : success(success), msg(msg), data(data){};
     Response(bool success, std::string msg) : success(success), msg(msg){};
-    MSGPACK_DEFINE(success, msg);
+    MSGPACK_DEFINE(success, msg, data);
     friend std::ostream &operator<<(std::ostream &os, Response &res) {
         std::cout << "[Response]"
                   << "success:" << res.success << ",msg:" << res.msg

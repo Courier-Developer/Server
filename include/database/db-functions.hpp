@@ -64,17 +64,17 @@ bool logout(int uid);
  * @brief 获取用户的所有信息 by id
  *
  * @param uid 用户id
- * @return Response<UserInfo>
+ * @return UserInfo
  */
-Response<UserInfo> get_info_by_uid(int uid);
+UserInfo get_info_by_uid(int uid);
 
 /**
  * @brief 获取用户的所有信息 by username
  *
  * @param username
- * @return Response<UserInfo>
+ * @return UserInfo
  */
-Response<UserInfo> get_info_by_username(std::string username);
+UserInfo get_info_by_username(std::string username);
 
 /**
  * @brief 更新用户信息
@@ -90,9 +90,9 @@ bool update_info(int uid, UserInfo ui);
  * @brief 获得一个用户的所有好友信息
  *
  * @param uid 用户id
- * @return Response<std::vector<Friend>> 包含所有好友信息的vector
+ * @return std::vector<Friend> 包含所有好友信息的vector
  */
-Response<std::vector<Friend>> list_friends(int uid);
+std::vector<Friend> list_friends(int uid);
 
 /// \brief 申请好友
 ///
@@ -125,20 +125,20 @@ bool delete_package (int ownerId, int packageId);
 
 /// \brief 根据名字搜索群聊
 ///没改！！！别乱用
-Response<std::vector<ChatGroup>> search_group(std::string group_name);
+std::vector<ChatGroup> search_group(std::string group_name);
 
 /// \brief 加入群聊
 bool join_chatGroup(int uid, int groupid);
 
 /// \brief 获得某人加入的所有群聊
-Response<std::vector<ChatGroup>> list_chat_groups(int uid);
+std::vector<ChatGroup> list_chat_groups(int uid);
 
 /// \brief 创建群聊
-/// \return Response<ChatGroup> 创建后的群聊信息，主要是包含id
-Response<ChatGroup> create_chat_group(int uid, std::string nickname);
+/// \return ChatGroup 创建后的群聊信息，主要是包含id
+ChatGroup create_chat_group(int uid, std::string nickname);
 
 /// \brief 获得某个群聊的所有用户信息
-Response<std::vector<Friend>> get_group_mumber(int group_id);
+std::vector<Friend> get_group_mumber(int group_id);
 
 /// \brief 离开一个群聊 退群
 ///
@@ -148,15 +148,15 @@ Response<std::vector<Friend>> get_group_mumber(int group_id);
 bool leave_group(int uid, int group_id);
 
 /// \brief 插入一条消息，创建、修改时间均为now
-Response<Message> insert_message(int senderId, int receiverId, MsgType type, bool isToGroup,std::string content);
+Message insert_message(int senderId, int receiverId, MsgType type, bool isToGroup,std::string content);
 
 /// \brief 获得上次离线以后所有关于自己的聊天记录
 ///
 /// 包括人对人和群组的
-Response<std::vector<Message>> get_unread_messages(int uid);
+std::vector<Message> get_unread_messages(int uid);
 
 //TODO
-Response<std::vector<Message>> get_all_message(int uid);
+std::vector<Message> get_all_message(int uid);
 
 /// \brief 从该路径中读取文件
 /// \param file_name 文件名，可以用相对路径
@@ -193,19 +193,19 @@ Response<std::vector<Message>> get_all_message(int uid);
 /// \brief 获得文件信息内容
 /// TODO incomplete definition
 /// 根据path取出存储在文件系统里的文件
-Response<Message> download_data(int uid, std::string path);
+// Message download_data(int uid, std::string path);
 
 /// \brief 上传文件
 /// TODO incomplete definition
 /// 根据path和data将文件存储
-bool upload_data(int uid, std::string path);
+// bool upload_data(int uid, std::string path);
 
 UserInfo get_my_info();
 
 std::vector<Friend> get_all_friends_info();
 
 std::vector<ChatGroup> get_all_chatGroups_info();
-Response<std::vector<package>> get_all_my_package();
+std::vector<package> get_all_my_package();
 /**
  * @brief 新建好友分组
  *
@@ -246,9 +246,9 @@ int send_message (int senderid, int receiverid, MsgType type, bool istoGroup, st
  * @brief Get the chatGroupWithMembers object
  * 
  * @param chatGroupId 
- * @return Response<chatGroup_with_members> 
+ * @return chatGroup_with_members 
  */
-Response<chatGroup_with_members> get_chatGroupWithMembers (int chatGroupId);
+chatGroup_with_members get_chatGroupWithMembers (int chatGroupId);
 
 
 std::vector<char> read_file_(string file_name);

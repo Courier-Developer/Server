@@ -112,12 +112,13 @@ int is_username_exists(std::string username) {
 
             return ret;
         } else {
-            return 0;
             puts("[db-funcs][is_username_exits] return 0");
+            return 0;
         }
     } else {
         return -1;
     }
+    return -1;
 }
 
 /**
@@ -194,7 +195,7 @@ bool logout(int uid) {
  * @param uid 用户id
  * @return Response<UserInfo>
  */
-Response<UserInfo> get_info_by_uid(int uid) {
+UserInfo get_info_by_uid(int uid) {
     uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
@@ -214,10 +215,10 @@ Response<UserInfo> get_info_by_uid(int uid) {
         info.nickname = R[0][6].c_str();
         info.ip = R[0][7].c_str();
         Response<UserInfo> resp(1, "UserInfo", info);
-        return resp;
+        return resp.data;
     } else {
         Response<UserInfo> resp(0, CONNECTION_ERROR);
-        return resp;
+        return resp.data;
     }
 }
 
@@ -227,13 +228,13 @@ Response<UserInfo> get_info_by_uid(int uid) {
  * @param username
  * @return Response<UserInfo>
  */
-Response<UserInfo> get_info_by_username(std::string username) {
+UserInfo get_info_by_username(std::string username) {
     int id = is_username_exists(username);
     if (id < 0) {
         Response<UserInfo> resp(0, NOT_FOUND_ERROR);
-        return resp;
+        return resp.data;
     } else {
-        Response<UserInfo> resp = get_info_by_uid(id);
+        UserInfo resp = get_info_by_uid(id);
         return resp;
     }
 }
@@ -273,13 +274,17 @@ bool update_info(int uid, UserInfo ui) {
  * @param uid 用户id
  * @return Response<std::vector<Friend>> 包含所有好友信息的vector
  */
-Response<std::vector<Friend>> list_friends(int uid) {
+std::vector<Friend> list_friends(int uid) {
     uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
         std::string sql =
-            "select friend.friend, packageid, u.username, u.createdtime, u.lastlogintime, u.birthday, u.ismale, u.ip, u.nickname, friend.mute, u.signature from friend inner join userinfo u on friend.friend = u.id where friend.owner = " + std::to_string(uid) + " and friend.isagreed = true;";
+            "select friend.friend, packageid, u.username, u.createdtime, "
+            "u.lastlogintime, u.birthday, u.ismale, u.ip, u.nickname, "
+            "friend.mute, u.signature from friend inner join userinfo u on "
+            "friend.friend = u.id where friend.owner = " +
+            std::to_string(uid) + " and friend.isagreed = true;";
         pqxx::result R = W.exec(sql);
 
         std::vector<Friend> all_friend;
@@ -301,10 +306,10 @@ Response<std::vector<Friend>> list_friends(int uid) {
             all_friend.push_back(tmp);
         }
         Response<std::vector<Friend>> resp(1, "successful", all_friend);
-        return resp;
+        return resp.data;
     } else {
         Response<std::vector<Friend>> resp(0, CONNECTION_ERROR);
-        return resp;
+        return resp.data;
     }
 }
 
@@ -328,7 +333,7 @@ bool request_friend(int uid, int friend_id) {
         W.exec(sql);
         W.commit();
 
-        UserInfo senderInfo = get_info_by_uid(uid).data;
+        UserInfo senderInfo = get_info_by_uid(uid);
 
         Friend senderInfo_as_Friend;
         senderInfo_as_Friend.uid = uid;
@@ -429,30 +434,29 @@ bool change_package(int owner_id, int friend_id, std::string package_name) {
 }
 
 ///删除群组
-bool delete_package (int ownerId, int packageId)
-{
+bool delete_package(int ownerId, int packageId) {
     pqxx::connection C(DBLOGINFO);
-    if (C.is_open())
-    {
+    if (C.is_open()) {
         pqxx::work W(C);
-        std::string sql_changeFriendsToDefaultPackage = "update friend set packageid = 1 where packageid = " + std::to_string(packageId) + " and owner = " + std::to_string(ownerId) + ";";
+        std::string sql_changeFriendsToDefaultPackage =
+            "update friend set packageid = 1 where packageid = " +
+            std::to_string(packageId) +
+            " and owner = " + std::to_string(ownerId) + ";";
         W.exec(sql_changeFriendsToDefaultPackage);
-        std::string sql_deletePackage = "delete from package where owner = " + std::to_string(ownerId) + " and packageid = " + std::to_string(packageId) + ";";
+        std::string sql_deletePackage =
+            "delete from package where owner = " + std::to_string(ownerId) +
+            " and packageid = " + std::to_string(packageId) + ";";
         W.exec(sql_deletePackage);
         W.commit();
         return 1;
-    }
-    else
-    {
+    } else {
         return 0;
     }
-    
 }
-
 
 /// \brief 根据名字搜索群聊
 ///没改！！！别乱用
-Response<std::vector<ChatGroup>> search_group(std::string group_name) {
+std::vector<ChatGroup> search_group(std::string group_name) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -461,7 +465,7 @@ Response<std::vector<ChatGroup>> search_group(std::string group_name) {
         pqxx::result R_search = W.exec(sql_search);
         if (R_search.size() == 0) {
             Response<std::vector<ChatGroup>> resp(0, NOT_FOUND_ERROR);
-            return resp;
+            return resp.data;
         } else {
             std::vector<ChatGroup> chatgroups;
             for (pqxx::result::const_iterator row = R_search.begin();
@@ -472,12 +476,12 @@ Response<std::vector<ChatGroup>> search_group(std::string group_name) {
                 chatgroups.push_back(tmp);
             }
             Response<std::vector<ChatGroup>> resp(1, SUCCESS_INFO, chatgroups);
-            return resp;
+            return resp.data;
         }
 
     } else {
         Response<std::vector<ChatGroup>> resp(0, CONNECTION_ERROR);
-        return resp;
+        return resp.data;
     }
 }
 
@@ -507,7 +511,7 @@ bool join_chatGroup(int uid, int groupid) {
 }
 
 /// \brief 获得某人加入的所有群聊
-Response<std::vector<ChatGroup>> list_chat_groups(int uid) {
+std::vector<ChatGroup> list_chat_groups(int uid) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -525,16 +529,16 @@ Response<std::vector<ChatGroup>> list_chat_groups(int uid) {
             chatgroups.push_back(tmp);
         }
         Response<std::vector<ChatGroup>> resp(1, SUCCESS_INFO, chatgroups);
-        return resp;
+        return resp.data;
     } else {
         Response<std::vector<ChatGroup>> resp(0, CONNECTION_ERROR);
-        return resp;
+        return resp.data;
     }
 }
 
 /// \brief 创建群聊
 /// \return Response<ChatGroup> 创建后的群聊信息，主要是包含id
-Response<ChatGroup> create_chat_group(int uid, std::string nickname) {
+ChatGroup create_chat_group(int uid, std::string nickname) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -553,15 +557,15 @@ Response<ChatGroup> create_chat_group(int uid, std::string nickname) {
         tmp.id = GroupId;
         tmp.name = nickname;
         Response<ChatGroup> resp(1, SUCCESS_INFO, tmp);
-        return resp;
+        return resp.data;
     } else {
         Response<ChatGroup> resp(0, CONNECTION_ERROR);
-        return resp;
+        return resp.data;
     }
 }
 
 /// \brief 获得某个群聊的所有用户信息
-Response<std::vector<Friend>> get_group_mumber(int group_id) {
+std::vector<Friend> get_group_mumber(int group_id) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -576,10 +580,8 @@ Response<std::vector<Friend>> get_group_mumber(int group_id) {
         std::vector<Friend> friends_in_chatGroup;
         for (pqxx::result::const_iterator row = R_listUsers.begin();
              row != R_listUsers.end(); ++row) {
-            Response<UserInfo> tmp(1, "temp");
-            tmp = get_info_by_uid(row[0].as<int>());
 
-            UserInfo info_as_userInfo = tmp.data;
+            UserInfo info_as_userInfo = get_info_by_uid(row[0].as<int>());
             Friend info_as_friendInfo;
             info_as_friendInfo.uid = info_as_userInfo.id;
             // packagename这里不赋值 也没意义！
@@ -596,10 +598,10 @@ Response<std::vector<Friend>> get_group_mumber(int group_id) {
         }
         Response<std::vector<Friend>> resp(1, SUCCESS_INFO,
                                            friends_in_chatGroup);
-        return resp;
+        return resp.data;
     } else {
         Response<std::vector<Friend>> resp(0, CONNECTION_ERROR);
-        return resp;
+        return resp.data;
     }
 }
 
@@ -624,8 +626,8 @@ bool leave_group(int uid, int group_id) {
 }
 
 /// \brief 插入一条消息，创建、修改时间均为now 自动生成消息id
-Response<Message> insert_message(int senderId, int receiverId, MsgType type,
-                                 bool isToGroup, std::string content) {
+Message insert_message(int senderId, int receiverId, MsgType type,
+                       bool isToGroup, std::string content) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -673,17 +675,17 @@ Response<Message> insert_message(int senderId, int receiverId, MsgType type,
 
         Response<Message> resp(1, SUCCESS_INFO, msg);
 
-        return resp;
+        return resp.data;
     } else {
         Response<Message> resp(0, CONNECTION_ERROR);
-        return resp;
+        return resp.data;
     }
 }
 
 /// \brief 获得上次离线以后所有关于自己的聊天记录
 ///
 /// 包括人对人和群组的
-Response<std::vector<Message>> get_unread_messages(int uid) {
+std::vector<Message> get_unread_messages(int uid) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W_getMsg(C);
@@ -714,18 +716,21 @@ Response<std::vector<Message>> get_unread_messages(int uid) {
             messages.push_back(tmp);
         }
         Response<std::vector<Message>> resp(1, SUCCESS_INFO, messages);
-        return resp;
+        return resp.data;
     } else {
         Response<std::vector<Message>> resp(0, CONNECTION_ERROR);
-        return resp;
+        return resp.data;
     }
 }
 
-Response<std::vector<Message>> get_all_message(int uid) {
+std::vector<Message> get_all_message(int uid) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W_getMsg(C);
-        std::string sql_getMsg = "select id, sender, receiver, type, createdtime, istogroup, content from message where receiver = " + std::to_string(uid) + ";";
+        std::string sql_getMsg =
+            "select id, sender, receiver, type, createdtime, istogroup, "
+            "content from message where receiver = " +
+            std::to_string(uid) + ";";
         pqxx::result R = W_getMsg.exec(sql_getMsg);
         std::vector<Message> messages;
         for (pqxx::result::const_iterator row = R.begin(); row != R.end();
@@ -746,10 +751,10 @@ Response<std::vector<Message>> get_all_message(int uid) {
             messages.push_back(tmp);
         }
         Response<std::vector<Message>> resp(1, SUCCESS_INFO, messages);
-        return resp;
+        return resp.data;
     } else {
         Response<std::vector<Message>> resp(0, CONNECTION_ERROR);
-        return resp;
+        return resp.data;
     }
 }
 
@@ -784,39 +789,36 @@ int save_file_(string file_name, std::vector<char> data) {
     std::ofstream file(file_name, std::ios::out | std::ios::binary);
     file.write((const char *)&data[0], data.size());
     file.close();
+    return data.size();
 }
 /// \brief 获得文件信息内容
 /// TODO incomplete definition
 /// 根据path取出存储在文件系统里的文件
-Response<Message> download_data(int uid, std::string path) {
+// Response<Message> download_data(int uid, std::string path) {
 
-}
+// }
 
 /// \brief 上传文件
 /// TODO incomplete definition
 /// 根据path和data将文件存储
-bool upload_data(int uid, std::string path) {}
+// bool upload_data(int uid, std::string path) {}
 
 UserInfo get_my_info() {
     UserInfo info;
     info.id = threadManager.get_uid();
-    Response<UserInfo> resp(1, CACHE_INFO);
-    resp = get_info_by_uid(info.id);
-    info = resp.data;
+    info = get_info_by_uid(info.id);
     return info;
 }
 
 std::vector<Friend> get_all_friends_info() {
     int owner_id = threadManager.get_uid();
-    Response<std::vector<Friend>> resp = list_friends(owner_id);
-    std::vector<Friend> friends = resp.data;
+    std::vector<Friend> friends = list_friends(owner_id);
     return friends;
 }
 
 std::vector<ChatGroup> get_all_chatGroups_info() {
     int owner_id = threadManager.get_uid();
-    Response<std::vector<ChatGroup>> resp = list_chat_groups(owner_id);
-    std::vector<ChatGroup> chatGroups = resp.data;
+    std::vector<ChatGroup> chatGroups = list_chat_groups(owner_id);
     return chatGroups;
 }
 
@@ -833,7 +835,7 @@ std::vector<ChatGroup> get_all_chatGroups_info() {
  */
 int create_package(int uid, int groupid, std::string package_name) {
     puts("[db-funcs][create_packege] start");
-    std::cout<<uid<<" "<<groupid<<" "<<package_name<<std::endl;
+    std::cout << uid << " " << groupid << " " << package_name << std::endl;
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -885,12 +887,11 @@ bool change_name_of_package(int uid, int package_id, std::string package_name) {
  * @param members
  * @return int
  */
-int create_chatGroup_and_invite_friends(std::string chatGroupName,std::vector<int> members) {
+int create_chatGroup_and_invite_friends(std::string chatGroupName,
+                                        std::vector<int> members) {
     int owner_id = threadManager.get_uid();
 
-    ChatGroup tmp;
-    Response<ChatGroup> resp = create_chat_group(owner_id, chatGroupName);
-    tmp = resp.data;
+    ChatGroup tmp = create_chat_group(owner_id, chatGroupName);
     int chatGroup_id = tmp.id;
 
     for (int i = 0; i < members.size(); ++i) {
@@ -901,9 +902,8 @@ int create_chatGroup_and_invite_friends(std::string chatGroupName,std::vector<in
 
 int send_message(int senderid, int receiverid, MsgType type, bool istoGroup,
                  std::string content) {
-    Response<Message> tmp(1, CACHE_INFO);
-    tmp = insert_message(senderid, receiverid, type, istoGroup, content);
-    Message msg_need_to_send = tmp.data;
+    Message msg_need_to_send =
+        insert_message(senderid, receiverid, type, istoGroup, content);
 
     if (msg_need_to_send.isToGroup == false) {
         if (threadManager.online(receiverid)) {
@@ -911,7 +911,7 @@ int send_message(int senderid, int receiverid, MsgType type, bool istoGroup,
         }
     } else {
         std::vector<Friend> friends_need_to_send;
-        friends_need_to_send = get_group_mumber(receiverid).data;
+        friends_need_to_send = get_group_mumber(receiverid);
         for (auto f : friends_need_to_send) {
             if (threadManager.online(f.uid)) {
                 threadManager.push(f.uid, PushType::MESSAGE, msg_need_to_send);
@@ -921,19 +921,23 @@ int send_message(int senderid, int receiverid, MsgType type, bool istoGroup,
     return 1;
 }
 
-Response<chatGroup_with_members> get_chatGroupWithMembers (int chatGroupId) {
+chatGroup_with_members get_chatGroupWithMembers(int chatGroupId) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
-        std::string sql_findGroupName = "select id, name from chatgroup where id = " + std::to_string(chatGroupId) + ";";
+        std::string sql_findGroupName =
+            "select id, name from chatgroup where id = " +
+            std::to_string(chatGroupId) + ";";
         pqxx::result R_findGroupName = W.exec(sql_findGroupName);
         if (R_findGroupName.size() == 0) {
             Response<chatGroup_with_members> resp(0, NOT_FOUND_ERROR);
-            return resp;
+            return resp.data;
         } else {
             int chatGroupId = R_findGroupName[0][0].as<int>();
             std::string name = R_findGroupName[0][1].c_str();
-            std::string sql_findMembers = "select userid from user_in_group where groupid = " + std::to_string(chatGroupId) + ";";
+            std::string sql_findMembers =
+                "select userid from user_in_group where groupid = " +
+                std::to_string(chatGroupId) + ";";
             pqxx::result R_findMembers = W.exec(sql_findMembers);
             std::vector<int> members;
             for (auto row : R_findMembers) {
@@ -944,38 +948,42 @@ Response<chatGroup_with_members> get_chatGroupWithMembers (int chatGroupId) {
             result.chatGroupName = name;
             result.members = members;
             Response<chatGroup_with_members> resp(1, SUCCESS_INFO, result);
-            return resp;
+            return resp.data;
         }
-        
+
     } else {
         Response<chatGroup_with_members> resp(0, CONNECTION_ERROR);
-        return resp;
+        return resp.data;
     }
-    
 }
 
-Response<std::vector<package>> get_all_my_package() {
+std::vector<package> get_all_my_package() {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         int uid = threadManager.get_uid();
         pqxx::work W(C);
-        std::string sql_getpkg = "select packageid, package_name from package where ownerid = " + std::to_string(uid) + ";";
+        std::string sql_getpkg =
+            "select packageid, package_name from package where ownerid = " +
+            std::to_string(uid) + ";";
         pqxx::result R = W.exec(sql_getpkg);
         std::vector<package> packages;
-        for (auto row : R)
-        {
+        printf("[db-funcs][get_all_my_package] size %d \n", R.size());
+        for (auto row : R) {
             package tmp;
             tmp.packageid = row[0].as<int>();
             tmp.packageName = row[1].c_str();
             packages.push_back(tmp);
+            printf("[db-funcs][get_all_my_package] %d %s\n", tmp.packageid,
+                   tmp.packageName.c_str());
         }
-        Response<std::vector<package>> resp(1, SUCCESS_INFO, packages);
-        return resp;
+        // Response<std::vector<package>> resp(1, SUCCESS_INFO, packages);
+        // for (auto row: resp.data){
+        //     printf("[db-funcs][get_all_my_package] %d
+        //     %s\n",row.packageid,row.packageName.c_str());
+        // }
+        return packages;
+    } else {
+        std::vector<package> p;
+        return p;
     }
-    else
-    {
-        Response<std::vector<package>> resp(0, CONNECTION_ERROR);
-        return resp;
-    }
-    
 }
