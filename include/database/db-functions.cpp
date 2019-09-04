@@ -623,8 +623,8 @@ Response<Message> insert_message(int senderId, int receiverId, MsgType type, boo
 
         pqxx::work W_findtime(C);
         std::string sql_findtime = "select createdtime from message where id = " + std::to_string(id) + ";";
-        pqxx::result R_find = W_findtime.exec(sql_findtime);
-        std::string createtime = R_find[0][0].c_str();
+        pqxx::result R_findtime = W_findtime.exec(sql_findtime);
+        std::string createtime = R_findtime[0][0].c_str();
 
         msg.createdTime = createtime;
         msg.editedTime = createtime;
