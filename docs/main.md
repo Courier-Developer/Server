@@ -5,10 +5,17 @@ marp: true
 
 # Courier
 
-A well designed instant messaging app.
+一个易于扩展的及时聊天软件。
 
 
 > https://github.com/Courier-Developer
+
+<br />
+<br />
+<br />
+<br />
+
+*我们的功能是市面上所有聊天软件功能的交集*
 
 <!--
 page_number: true
@@ -19,7 +26,8 @@ footer: 第13组  xxx, xxx, xxx, xxx, xxx
 
 # Feature
 
-- 个人 / 群组聊天
+- 注册 / 登录 / 登出
+- 个人 
 - 查找 / 添加 / 删除好友
 - 
 
@@ -30,7 +38,7 @@ footer: 第13组  xxx, xxx, xxx, xxx, xxx
 
 - UI
 
-## 孙彰亮
+## 孙璋亮
 
 ---
 
@@ -39,12 +47,14 @@ footer: 第13组  xxx, xxx, xxx, xxx, xxx
 
 ## 袁瑞泽
 
+- 客户端数据库操作
 
-
+- 类型转换
 
 ## 杨福浩
 
-- 服务器数据库操作
+- 服务器数据库构建与维护
+- 提供服务器数据库增、删、改、查的C++接口
 
 ---
 

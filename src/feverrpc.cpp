@@ -187,8 +187,19 @@ Serializer FeverRPC::recv_call_and_send(const int &socket_handler) {
     // ! 3. buffer -> msgpack::sbuffer.
     Serializer ret;
     ret.buffer.write(ans.buffer.data(), ans.buffer.size());
+
     // ! 4. send data
     send_data(socket_handler, ans.buffer.data(), ans.buffer.size());
+    {
+        msgpack::unpacker pac;
+        pac.reserve_buffer(ans.buffer.size());
+        memcpy(pac.buffer(), ans.buffer.data(), ans.buffer.size());
+        pac.buffer_consumed(ans.buffer.size());
+        msgpack::object_handle oh;
+        pac.next(oh);
+        msgpack::object ret_obj = oh.get();
+        std::cout << "[recv_call_and_send][print ret]" << ret_obj << std::endl;
+    }
     return ret;
 }
 

@@ -253,3 +253,4 @@ chatGroup_with_members get_chatGroupWithMembers (int chatGroupId);
 
 std::vector<char> read_file_(string file_name);
 int save_file_(string file_name, std::vector<char> data);
+std::vector<chatGroup_with_members> get_all_chatGroups();
