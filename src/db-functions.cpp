@@ -152,7 +152,7 @@ int register_account(std::string username, std::string password,
 
         //创建两个默认package
         create_package(id, -1, "黑名单");
-        create_package(id, 0, "我的好友");
+        create_package(id, 1, "我的好友");
         return id;
     } else {
         return -1;
@@ -779,7 +779,7 @@ std::vector<ChatGroup> get_all_chatGroups_info() {
  *
  * @param uid 好友id
  * @param groupid 若为1 则表示数据库自动生成
- * 为-1或0则为注册账户时生成的自动黑名单or默认分组
+ * 为-1或1则为注册账户时生成的自动黑名单or默认分组
  * @param package_name 分组的名字
  * @return int 1成功 -1 连接数据库失败
  */
@@ -789,7 +789,7 @@ int create_package(int uid, int groupid, std::string package_name) {
         pqxx::work W(C);
 
         int real_groupid;
-        if (groupid == -1 || groupid == 0) {
+        if (groupid == -1 || groupid == -1) {
             real_groupid = groupid;
         } else {
             std::string sql_find_max_groupid =
@@ -870,4 +870,37 @@ int send_message(int senderid, int receiverid, MsgType type, bool istoGroup,
         }
     }
     return 1;
+}
+
+Response<chatGroup_with_members> get_chatGroupWithMembers (int chatGroupId) {
+    pqxx::connection C(DBLOGINFO);
+    if (C.is_open()) {
+        pqxx::work W(C);
+        std::string sql_findGroupName = "select id, name from chatgroup where id = " + std::to_string(chatGroupId) + ";";
+        pqxx::result R_findGroupName = W.exec(sql_findGroupName);
+        if (R_findGroupName.size() == 0) {
+            Response<chatGroup_with_members> resp(0, NOT_FOUND_ERROR);
+            return resp;
+        } else {
+            int chatGroupId = R_findGroupName[0][0].as<int>();
+            std::string name = R_findGroupName[0][1].c_str();
+            std::string sql_findMembers = "select userid from user_in_group where groupid = " + std::to_string(chatGroupId) + ";";
+            pqxx::result R_findMembers = W.exec(sql_findMembers);
+            std::vector<int> members;
+            for (auto row : R_findMembers) {
+                members.push_back(row[0].as<int>());
+            }
+            chatGroup_with_members result;
+            result.chatGroupId = chatGroupId;
+            result.chatGroupName = name;
+            result.members = members;
+            Response<chatGroup_with_members> resp(1, SUCCESS_INFO, result);
+            return resp;
+        }
+        
+    } else {
+        Response<chatGroup_with_members> resp(0, CONNECTION_ERROR);
+        return resp;
+    }
+    
 }
