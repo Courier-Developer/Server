@@ -8,11 +8,11 @@ marp: true
 A well designed instant messaging app.
 
 
-> ersafasdfasdfasfdasfdasdfasdfasdfasdfasfd
+> https://github.com/Courier-Developer
 
 <!--
 page_number: true
-footer: 第13组
+footer: 第13组  xxx, xxx, xxx, xxx,xxx
 -->
 
 ---
@@ -25,5 +25,45 @@ footer: 第13组
 
 ---
 
+# :cake: Members
+## 谢威宇
+
+- UI
+
+## 孙彰亮
+
+---
+
+# :cake: Members
+
+
+## 袁瑞泽
+
+
+
+
+## 杨福浩
+
+- 服务器数据库操作
+
+---
+
 # Members
-## 
+
+## 冯开宇
+
+- 双向RPC框架
+- 线程管理
+
+## 王聚海
+
+- 项目设计
+- ~~啦啦操~~
+
+---
+
+# 技术选型
+
+- Postgres
+- RPC
+- MsgPack序列化方案

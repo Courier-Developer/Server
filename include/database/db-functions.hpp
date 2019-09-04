@@ -9,7 +9,6 @@
 #include <iterator>
 #include <string>
 #include <vector>
-#include "db-functions.cpp"
 
 
 // https://github.com/Courier-Developer/feverrpc/blob/master/lock.cpp

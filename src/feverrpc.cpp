@@ -134,7 +134,12 @@ Serializer FeverRPC::call_(std::string name, msgpack::object args_obj) {
     // do some hijack;
     // 可以在这里检查比如登录功能。
     auto fun = funcs_map[name];
-    fun(&ds, args_obj);
+    try {
+        fun(&ds, args_obj);
+    } catch (const std::exception &e) {
+      throw e;
+    }
+
     return ds;
 }
 
@@ -348,7 +353,7 @@ void Server::s2c() {
                             // TODO
                         } else if (p.first == PushType::LOGOUT) {
                             int user_id = p.second;
-                            printf("GETGETGET %d LOGOUT!\n",user_id);
+                            printf("GETGETGET %d LOGOUT!\n", user_id);
                         }
                     } else {
                         // 没有通知
@@ -401,8 +406,9 @@ void Server::c2s() {
             Serializer _ans = recv_call_and_send(new_socket_handler);
             puts("[c2s] login/register 调用 success");
             uid = unpack_ret_val<int>(_ans.buffer);
-            if (uid < 0) {
+            if (uid <= 0) {
                 // 认证失败,退出
+                puts("[c2s] 认证失败，将要退出");
                 close(new_socket_handler);
                 return;
             }
@@ -412,8 +418,9 @@ void Server::c2s() {
             while (1) {
                 try {
                     recv_call_and_send(new_socket_handler);
-                    printf("[c2s][%lld]recv_call_and_send() has ben executed;\n",
-                           std::this_thread::get_id());
+                    printf(
+                        "[c2s][%lld]recv_call_and_send() has ben executed;\n",
+                        std::this_thread::get_id());
                 } catch (const std::exception &e) {
                     // 这里会在客户端退出时捕获异常，并进行逻辑处理
                     // 基本的思想是，利用threadManager

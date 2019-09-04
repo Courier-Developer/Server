@@ -22,6 +22,7 @@ int main(int argc, char const *argv[]) {
             rpc.bind("get_info_by_uid", get_info_by_uid);
             rpc.bind("get_info_by_username",get_info_by_username);
             rpc.bind("update_info", update_info);
+
             rpc.bind("list_friends", list_friends);
             rpc.bind("request_friend", request_friend);
             rpc.bind("make_friend", make_friend);
@@ -31,6 +32,9 @@ int main(int argc, char const *argv[]) {
             rpc.bind("change_package",change_package);
             rpc.bind("create_package",create_package);
             rpc.bind("create_chatGroup_and_invite_friends",create_chatGroup_and_invite_friends);
+            rpc.bind("change_name_of_package",change_name_of_package);
+            rpc.bind("create_chatGroup_and_invite_friends",create_chatGroup_and_invite_friends);
+            rpc.bind("send_message",send_message);
 
             rpc.bind("join_chatGroup", join_chatGroup);
             rpc.bind("list_chat_groups", list_chat_groups);
@@ -39,6 +43,7 @@ int main(int argc, char const *argv[]) {
             rpc.bind("leave_group", leave_group);
             rpc.bind("insert_message", insert_message);
             rpc.bind("get_unread_messages", get_unread_messages);
+            rpc.bind("get_all_message",get_all_message);
 
             rpc.bind("get_my_info",get_my_info);
             rpc.bind("get_all_friends_info",get_all_friends_info);
