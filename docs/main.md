@@ -140,5 +140,5 @@ int main(){
 
 ## 实现方式
 
-- std::function + std::bind
-- 
+- std::function + std::bind 解决函数绑定问题
+- <typename... Args> variadic templates

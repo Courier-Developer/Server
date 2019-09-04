@@ -314,20 +314,24 @@ std::vector<Friend> list_friends(int uid) {
 /// 需要同时向ThreadManager发送请求
 /// 在数据库中存储的时候需要存储单向的
 bool request_friend(int uid, int friend_id) {
+    puts("[db-funcs][request_friends] enter");
     uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
+        puts("[db-funcs][request_friends] connect");
         pqxx::work W(C);
         std::string sql = "insert into friend (owner, friend, packageid, mute, "
                           "isagreed) values (" +
                           std::to_string(uid) + ", " +
                           std::to_string(friend_id) +
-                          ", 0, false, false);\ninsert into friend (owner, "
+                          ", 1, false, true);\ninsert into friend (owner, "
                           "friend, packageid, mute, isagreed) values (" +
                           std::to_string(friend_id) + ", " +
-                          std::to_string(uid) + ", 0, false, false);";
+                          std::to_string(uid) + ", 1, false, true);";
         W.exec(sql);
+        puts("[db-funcs][request_friends] execute");
         W.commit();
+        puts("[db-funcs][request_friends] commited");
 
         UserInfo senderInfo = get_info_by_uid(uid);
 
@@ -335,9 +339,12 @@ bool request_friend(int uid, int friend_id) {
         senderInfo_as_Friend.uid = uid;
         senderInfo_as_Friend.username = senderInfo.username;
         senderInfo_as_Friend.nickname = senderInfo.nickname;
+        puts("[db-funcs][request_friends] push");
+
         //注意：只有这三个字段有意义
-        threadManager.push(friend_id, PushType::FRIEND_WANGTED,
-                           senderInfo_as_Friend);
+        if (threadManager.online(friend_id))
+            threadManager.push(friend_id, PushType::FRIEND_WANGTED,
+                               senderInfo_as_Friend);
         return 1;
     } else {
         return 0;
@@ -622,8 +629,8 @@ bool leave_group(int uid, int group_id) {
 }
 
 /// \brief 插入一条消息，创建、修改时间均为now 自动生成消息id
-Message insert_message(int senderId, int receiverId, int type,
-                       bool isToGroup, std::string content) {
+Message insert_message(int senderId, int receiverId, int type, bool isToGroup,
+                       std::string content) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -636,7 +643,6 @@ Message insert_message(int senderId, int receiverId, int type,
         } else {
             id = R_find[0][0].as<int>() + 1;
         }
-
 
         std::string is_to_group_str = isToGroup ? "true" : "false";
         std::string sql_istMsg =
@@ -682,7 +688,17 @@ std::vector<Message> get_unread_messages(int uid) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W_getMsg(C);
-        std::string sql_getMsg ="select id, sender, receiver, type, createdtime, istogroup, content from message where ((receiver = " + std::to_string(uid) + " and istogroup = false) or (receiver in (select groupid from user_in_group where id = " + std::to_string(uid) + ") and istogroup = true) or sender = " + std::to_string(uid) + ") and message.createdtime > (select lastlogintime from userinfo where id = " + std::to_string(uid) + ");";
+        std::string sql_getMsg =
+            "select id, sender, receiver, type, createdtime, istogroup, "
+            "content from message where ((receiver = " +
+            std::to_string(uid) +
+            " and istogroup = false) or (receiver in (select groupid from "
+            "user_in_group where id = " +
+            std::to_string(uid) +
+            ") and istogroup = true) or sender = " + std::to_string(uid) +
+            ") and message.createdtime > (select lastlogintime from userinfo "
+            "where id = " +
+            std::to_string(uid) + ");";
         pqxx::result R = W_getMsg.exec(sql_getMsg);
         std::vector<Message> messages;
         for (pqxx::result::const_iterator row = R.begin(); row != R.end();
@@ -711,7 +727,14 @@ std::vector<Message> get_all_message(int uid) {
     if (C.is_open()) {
         pqxx::work W_getMsg(C);
         uid = threadManager.get_uid();
-        std::string sql_getMsg = "select id, sender, receiver, type, createdtime, istogroup, content from message where (receiver = " + std::to_string(uid) + " and istogroup = false) or (receiver in (select groupid from user_in_group where id = " + std::to_string(uid) + ") and istogroup = true) or sender = " + std::to_string(uid) + ";";
+        std::string sql_getMsg =
+            "select id, sender, receiver, type, createdtime, istogroup, "
+            "content from message where (receiver = " +
+            std::to_string(uid) +
+            " and istogroup = false) or (receiver in (select groupid from "
+            "user_in_group where id = " +
+            std::to_string(uid) +
+            ") and istogroup = true) or sender = " + std::to_string(uid) + ";";
         pqxx::result R = W_getMsg.exec(sql_getMsg);
         std::vector<Message> messages;
         for (pqxx::result::const_iterator row = R.begin(); row != R.end();
@@ -892,7 +915,7 @@ int send_message(int senderid, int receiverid, int type, bool istoGroup,
         std::vector<Friend> friends_need_to_send;
         friends_need_to_send = get_group_mumber(receiverid);
         for (auto f : friends_need_to_send) {
-            if(f.uid == senderid)
+            if (f.uid == senderid)
                 continue;
             if (threadManager.online(f.uid)) {
                 threadManager.push(f.uid, PushType::MESSAGE, msg_need_to_send);
