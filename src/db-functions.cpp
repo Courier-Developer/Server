@@ -169,7 +169,6 @@ int register_account(std::string username, std::string password,
 bool logout(int uid) {
     uid = threadManager.get_uid();
     printf("[db-funcs][logout]%d\n", uid);
-    threadManager.push(uid, PushType::LOGOUT, 1234);
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         // TODO 通知所有好友我下线了

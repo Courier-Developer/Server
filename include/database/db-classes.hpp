@@ -117,4 +117,5 @@ struct chatGroup_with_members {
     int chatGroupId;
     std::string chatGroupName;
     std::vector<int> members;
+    MSGPACK_DEFINE(chatGroupId, chatGroupName, members);
 };

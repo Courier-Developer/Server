@@ -137,7 +137,7 @@ Serializer FeverRPC::call_(std::string name, msgpack::object args_obj) {
     try {
         fun(&ds, args_obj);
     } catch (const std::exception &e) {
-      throw e;
+        throw e;
     }
 
     return ds;
@@ -329,31 +329,32 @@ void Server::s2c() {
                     if (threadManager.have_push(uid, 1)) {
                         auto p = threadManager.get_push_friend(uid);
                         if (p.first == PushType::FRIEND_WANGTED) {
-                            // TODO
+                            note<int>(new_socket_handler, "friendQuest",
+                                      p.second);
                         } else if (p.first == PushType::FRIEND_CONFIRMED) {
-                            // TODO
+                            note<int>(new_socket_handler, "friendConfirm",
+                                      p.second);
                         } else if (p.first == PushType::FRIEND_DELETED) {
-                            // TODO
+                            // !Feature DELETED
                         }
                         // Message
                     } else if (threadManager.have_push(uid, 2)) {
                         auto p = threadManager.get_push_message(uid);
                         if (p.first == PushType::MESSAGE) {
-                            // TODO
+                            note<int>(new_socket_handler, "newMessage",p.second);
                         }
                         //
                     } else if (threadManager.have_push(uid, 3)) {
                         auto p = threadManager.get_push_group(uid);
                         if (p.first == PushType::GROUP_ADDED) {
-                            // TODO: CALL FUNCITON
+                            note<int>(new_socket_handler, "groupAdd",p.second);
                         }
                     } else if (threadManager.have_push(uid, 4)) {
                         auto p = threadManager.get_push_status(uid);
                         if (p.first == PushType::LOGIN) {
-                            // TODO
+                            note<int>(new_socket_handler, "userLogin",p.second);
                         } else if (p.first == PushType::LOGOUT) {
-                            int user_id = p.second;
-                            printf("GETGETGET %d LOGOUT!\n", user_id);
+                            note<int>(new_socket_handler, "userLogout",p.second);
                         }
                     } else {
                         // 没有通知
