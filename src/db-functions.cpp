@@ -728,10 +728,7 @@ std::vector<Message> get_all_message(int uid) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W_getMsg(C);
-        std::string sql_getMsg =
-            "select id, sender, receiver, type, createdtime, istogroup, "
-            "content from message where receiver = " +
-            std::to_string(uid) + ";";
+        std::string sql_getMsg = "select id, sender, receiver, type, createdtime, istogroup, content from message where receiver = " + std::to_string(uid) + " or sender = " + std::to_string(uid) + ";";
         pqxx::result R = W_getMsg.exec(sql_getMsg);
         std::vector<Message> messages;
         for (pqxx::result::const_iterator row = R.begin(); row != R.end();
