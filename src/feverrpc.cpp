@@ -175,6 +175,8 @@ Serializer FeverRPC::recv_call_and_send(const int &socket_handler) {
     msgpack::object name_obj = oh.get();
     pac.next(oh);
     msgpack::object args_obj = oh.get();
+    std::cout << "[recv_call_and_send][print args]" << args_obj << std::endl;
+    ;
     Serializer ds;
     // get `func_name`.
     std::string func_name;
@@ -341,20 +343,23 @@ void Server::s2c() {
                     } else if (threadManager.have_push(uid, 2)) {
                         auto p = threadManager.get_push_message(uid);
                         if (p.first == PushType::MESSAGE) {
-                            note<int>(new_socket_handler, "newMessage",p.second);
+                            note<int>(new_socket_handler, "newMessage",
+                                      p.second);
                         }
                         //
                     } else if (threadManager.have_push(uid, 3)) {
                         auto p = threadManager.get_push_group(uid);
                         if (p.first == PushType::GROUP_ADDED) {
-                            note<int>(new_socket_handler, "groupAdd",p.second);
+                            note<int>(new_socket_handler, "groupAdd", p.second);
                         }
                     } else if (threadManager.have_push(uid, 4)) {
                         auto p = threadManager.get_push_status(uid);
                         if (p.first == PushType::LOGIN) {
-                            note<int>(new_socket_handler, "userLogin",p.second);
+                            note<int>(new_socket_handler, "userLogin",
+                                      p.second);
                         } else if (p.first == PushType::LOGOUT) {
-                            note<int>(new_socket_handler, "userLogout",p.second);
+                            note<int>(new_socket_handler, "userLogout",
+                                      p.second);
                         }
                     } else {
                         // 没有通知
@@ -419,9 +424,8 @@ void Server::c2s() {
             while (1) {
                 try {
                     recv_call_and_send(new_socket_handler);
-                    printf(
-                        "[c2s][%lld]recv_call_and_send() 已经成功执行\n",
-                        std::this_thread::get_id());
+                    printf("[c2s][%lld]recv_call_and_send() 已经成功执行\n\n",
+                           std::this_thread::get_id());
                 } catch (const std::exception &e) {
                     // 这里会在客户端退出时捕获异常，并进行逻辑处理
                     // 基本的思想是，利用threadManager

@@ -50,8 +50,8 @@ int main(int argc, char const *argv[]) {
             rpc.bind("get_all_friends_info",get_all_friends_info);
             rpc.bind("get_all_chatGroups_info",get_all_chatGroups_info);
             rpc.bind("get_chatGroupWithMembers",get_chatGroupWithMembers);
-            // rpc.bind("read_file",read_file_);
-            // rpc.bind("save_file",save_file_);
+            rpc.bind("read_file",read_file_);
+            rpc.bind("save_file",save_file_);
             rpc.c2s();
         }};
         thread_guard gg(_thread_1);

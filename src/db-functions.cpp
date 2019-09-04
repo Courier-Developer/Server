@@ -780,7 +780,7 @@ std::vector<char> read_file_(string file_name) {
 /// \param file_name 文件名，与 read_file 中路径一致
 /// \param data 数据
 /// \return Void
-void save_file_(string file_name, std::vector<char> data) {
+int save_file_(string file_name, std::vector<char> data) {
     std::ofstream file(file_name, std::ios::out | std::ios::binary);
     file.write((const char *)&data[0], data.size());
     file.close();
@@ -832,6 +832,8 @@ std::vector<ChatGroup> get_all_chatGroups_info() {
  * @return int 1成功 -1 连接数据库失败
  */
 int create_package(int uid, int groupid, std::string package_name) {
+    puts("[db-funcs][create_packege] start");
+    std::cout<<uid<<" "<<groupid<<" "<<package_name<<std::endl;
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);

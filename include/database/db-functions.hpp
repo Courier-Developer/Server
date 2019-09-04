@@ -252,4 +252,4 @@ Response<chatGroup_with_members> get_chatGroupWithMembers (int chatGroupId);
 
 
 std::vector<char> read_file_(string file_name);
-void save_file_(string file_name, std::vector<char> data);
+int save_file_(string file_name, std::vector<char> data);
