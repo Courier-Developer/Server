@@ -279,11 +279,7 @@ Response<std::vector<Friend>> list_friends(int uid) {
     if (C.is_open()) {
         pqxx::work W(C);
         std::string sql =
-            "select friend.friend, packageid, u.username, u.createdtime, "
-            "u.lastlogintime, u.birthday, u.ismale, u.ip, u.nickname, "
-            "friend.mute, u.signature from friend inner join userinfo u on "
-            "friend.owner = u.id where friend.owner = " +
-            std::to_string(uid) + " and friend.isagreed = true;";
+            "select friend.friend, packageid, u.username, u.createdtime, u.lastlogintime, u.birthday, u.ismale, u.ip, u.nickname, friend.mute, u.signature from friend inner join userinfo u on friend.friend = u.id where friend.owner = " + std::to_string(uid) + " and friend.isagreed = true;";
         pqxx::result R = W.exec(sql);
 
         std::vector<Friend> all_friend;
