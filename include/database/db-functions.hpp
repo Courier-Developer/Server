@@ -49,7 +49,7 @@ int is_username_exists(std::string username);
  * @param ismale 性别
  * @return int -2 用户名已存在 -1 数据库连接错误 正数 用户的id
  */
-int register_account(std::string username, std::string password,std::string nickname, bool ismale);
+int register_account(std::string username, std::string password, std::string nickname, bool ismale);
 
 /**
  * @brief 正常下线，修改lastlogintime字段
@@ -117,7 +117,7 @@ bool delete_friend(int uid, int friend_id);
  */
 int find_package(int uid, std::string package_name);
 
-/// \brief 修改好友所在群组
+/// \brief 修改好友所在分组
 bool change_package(int owner_id, int friend_id, std::string package_name);
 
 /// \brief 根据名字搜索群聊

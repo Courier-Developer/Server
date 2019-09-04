@@ -52,7 +52,7 @@ struct UserInfo {
 /// 好友和群聊好友都用这个？
 struct Friend {
     int uid;
-    std::string packageid; ///< 只存好友分组的信息！群聊好友中不用这个字段
+    int packageid; ///< 只存好友分组的信息！群聊好友中不用这个字段
     std::string username;
     std::string createdTime;
     std::string lastLoginTime;
@@ -118,4 +118,10 @@ struct chatGroup_with_members {
     std::string chatGroupName;
     std::vector<int> members;
     MSGPACK_DEFINE(chatGroupId, chatGroupName, members);
+};
+
+struct package {
+    int packageid;
+    std::string packageName;
+    MSGPACK_DEFINE(packageid, packageName);
 };

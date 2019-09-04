@@ -53,7 +53,7 @@ int set_timezone() {
  *
  * @param username 用户名
  * @param password 密码
- * @return int 0-密码错误 1-密码正确 -1-数据库连接错误
+ * @return int 0-密码错误 >0登陆成功返回uid -1-数据库连接错误
  */
 int login(std::string username, std::string password, std::string ip) {
     // TODO 会崩溃
@@ -703,7 +703,35 @@ Response<std::vector<Message>> get_unread_messages(int uid) {
 }
 
 Response<std::vector<Message>> get_all_message(int uid) {
-    // TODO;
+    pqxx::connection C(DBLOGINFO);
+    if (C.is_open()) {
+        pqxx::work W_getMsg(C);
+        std::string sql_getMsg = "select id, sender, receiver, type, createdtime, istogroup, content from message where receiver = " + std::to_string(uid) + ";";
+        pqxx::result R = W_getMsg.exec(sql_getMsg);
+        std::vector<Message> messages;
+        for (pqxx::result::const_iterator row = R.begin(); row != R.end();
+             ++row) {
+            Message tmp;
+            tmp.id = row[0].as<int>();
+            tmp.sender = row[1].as<int>();
+            tmp.receiver = row[2].as<int>();
+            tmp.type = strcmp(row[3].c_str(), "text") == 0
+                           ? MsgType::MSGTYPE_TEXT
+                           : strcmp(row[3].c_str(), "FILE") == 0
+                                 ? MsgType::MSGTYPE_FILE
+                                 : MsgType::MSGTYPE_IMAGE;
+            tmp.createdTime = row[4].c_str();
+            tmp.editedTime = tmp.createdTime;
+            tmp.isToGroup = strcmp(row[5].c_str(), "true") == 0 ? 1 : 0;
+            tmp.content = row[6].c_str();
+            messages.push_back(tmp);
+        }
+        Response<std::vector<Message>> resp(1, SUCCESS_INFO, messages);
+        return resp;
+    } else {
+        Response<std::vector<Message>> resp(0, CONNECTION_ERROR);
+        return resp;
+    }
 }
 
 /// \brief 从该路径中读取文件
@@ -899,6 +927,32 @@ Response<chatGroup_with_members> get_chatGroupWithMembers (int chatGroupId) {
         
     } else {
         Response<chatGroup_with_members> resp(0, CONNECTION_ERROR);
+        return resp;
+    }
+    
+}
+
+Response<std::vector<package>> get_all_my_package() {
+    pqxx::connection C(DBLOGINFO);
+    if (C.is_open()) {
+        int uid = threadManager.get_uid();
+        pqxx::work W(C);
+        std::string sql_getpkg = "select packageid, package_name from package where ownerid = " + std::to_string(uid) + ";";
+        pqxx::result R = W.exec(sql_getpkg);
+        std::vector<package> packages;
+        for (auto row : R)
+        {
+            package tmp;
+            tmp.packageid = row[0].as<int>();
+            tmp.packageName = row[1].c_str();
+            packages.push_back(tmp);
+        }
+        Response<std::vector<package>> resp(1, SUCCESS_INFO, packages);
+        return resp;
+    }
+    else
+    {
+        Response<std::vector<package>> resp(0, CONNECTION_ERROR);
         return resp;
     }
     
