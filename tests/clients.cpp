@@ -33,7 +33,7 @@ int main() {
         _rpc.s2c();
     }};
     thread_guard g(_thread);
-    rpc.call<int>("send_message",2,2,MsgType::MSGTYPE_TEXT,false,"Hello, My Friend!");
+    rpc.call<int>("send_message",2,2,1,false,"Hello, My Friend!");
 
     this_thread::sleep_for(chrono::seconds(2));
     rpc.call<bool>("logout", 1);

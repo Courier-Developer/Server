@@ -620,7 +620,7 @@ bool leave_group(int uid, int group_id) {
 }
 
 /// \brief 插入一条消息，创建、修改时间均为now 自动生成消息id
-Message insert_message(int senderId, int receiverId, MsgType type,
+Message insert_message(int senderId, int receiverId, int type,
                        bool isToGroup, std::string content) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
@@ -635,16 +635,13 @@ Message insert_message(int senderId, int receiverId, MsgType type,
             id = R_find[0][0].as<int>() + 1;
         }
 
-        std::string message_type_str =
-            type == MsgType::MSGTYPE_TEXT
-                ? "text"
-                : type == MsgType::MSGTYPE_FILE ? "file" : "image";
+
         std::string is_to_group_str = isToGroup ? "true" : "false";
         std::string sql_istMsg =
             "insert into message (id, sender, receiver, type, createdtime, "
             "editedtime, istogroup, content) values (" +
             std::to_string(id) + ", " + std::to_string(senderId) + ", " +
-            std::to_string(receiverId) + ", '" + message_type_str +
+            std::to_string(receiverId) + ", '" + std::to_string(type) +
             "', now()::timestamp, now()::timestamp, " + is_to_group_str +
             ", '" + content + "');";
         W.exec(sql_istMsg);
@@ -692,11 +689,7 @@ std::vector<Message> get_unread_messages(int uid) {
             tmp.id = row[0].as<int>();
             tmp.sender = row[1].as<int>();
             tmp.receiver = row[2].as<int>();
-            tmp.type = strcmp(row[3].c_str(), "text") == 0
-                           ? MsgType::MSGTYPE_TEXT
-                           : strcmp(row[3].c_str(), "FILE") == 0
-                                 ? MsgType::MSGTYPE_FILE
-                                 : MsgType::MSGTYPE_IMAGE;
+            tmp.type = row[3].as<int>();
             tmp.createdTime = row[4].c_str();
             tmp.editedTime = tmp.createdTime;
             tmp.isToGroup = strcmp(row[5].c_str(), "true") == 0 ? 1 : 0;
@@ -715,6 +708,7 @@ std::vector<Message> get_all_message(int uid) {
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W_getMsg(C);
+        uid = threadManager.get_uid();
         std::string sql_getMsg = "select id, sender, receiver, type, createdtime, istogroup, content from message where (receiver = " + std::to_string(uid) + " and istogroup = false) or (receiver in (select groupid from user_in_group where id = " + std::to_string(uid) + ") and istogroup = true) or sender = " + std::to_string(uid) + ";";
         pqxx::result R = W_getMsg.exec(sql_getMsg);
         std::vector<Message> messages;
@@ -724,11 +718,7 @@ std::vector<Message> get_all_message(int uid) {
             tmp.id = row[0].as<int>();
             tmp.sender = row[1].as<int>();
             tmp.receiver = row[2].as<int>();
-            tmp.type = strcmp(row[3].c_str(), "text") == 0
-                           ? MsgType::MSGTYPE_TEXT
-                           : strcmp(row[3].c_str(), "FILE") == 0
-                                 ? MsgType::MSGTYPE_FILE
-                                 : MsgType::MSGTYPE_IMAGE;
+            tmp.type = row[3].as<int>();
             tmp.createdTime = row[4].c_str();
             tmp.editedTime = tmp.createdTime;
             tmp.isToGroup = strcmp(row[5].c_str(), "true") == 0 ? 1 : 0;
@@ -885,7 +875,7 @@ int create_chatGroup_and_invite_friends(std::string chatGroupName,
     return chatGroup_id;
 }
 
-int send_message(int senderid, int receiverid, MsgType type, bool istoGroup,
+int send_message(int senderid, int receiverid, int type, bool istoGroup,
                  std::string content) {
     Message msg_need_to_send =
         insert_message(senderid, receiverid, type, istoGroup, content);

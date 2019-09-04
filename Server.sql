@@ -42,13 +42,11 @@ create table User_in_Group(
     primary key (userId, groupId)
 );
 
-create type MsgType as enum ('text', 'file', 'image');
-
 create table Message(
     id integer primary key,
     sender integer references UserInfo(id),
     receiver integer references UserInfo(id),
-    type MsgType,
+    type integer, --1文字2文件3图片
     createdTime timestamp,
     editedTime timestamp,
     isToGroup boolean,
