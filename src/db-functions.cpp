@@ -230,9 +230,10 @@ UserInfo get_info_by_uid(int uid) {
  */
 UserInfo get_info_by_username(std::string username) {
     int id = is_username_exists(username);
-    if (id < 0) {
-        Response<UserInfo> resp(0, NOT_FOUND_ERROR);
-        return resp.data;
+    if (id <= 0) {
+        UserInfo resp;
+        resp.id = 0;
+        return resp;
     } else {
         UserInfo resp = get_info_by_uid(id);
         return resp;
@@ -986,4 +987,29 @@ std::vector<package> get_all_my_package() {
         std::vector<package> p;
         return p;
     }
+}
+
+std::vector<chatGroup_with_members> get_all_chatGroups() {
+    pqxx::connection C(DBLOGINFO);
+    if (C.is_open())
+    {
+        int uid = threadManager.get_uid();
+        pqxx::work W(C);
+        std::string sql_findAllGroups = "select id from chatgroup where id in (select groupid from user_in_group where userid = " + std::to_string(uid) + ");";
+        pqxx::result R = W.exec(sql_findAllGroups);
+        std::vector<chatGroup_with_members> resp;
+        for(auto row : R)
+        {
+            int id = row[0].as<int>();
+            chatGroup_with_members tmp = get_chatGroupWithMembers(id);
+            resp.push_back(tmp);
+        }
+        return resp;
+    }
+    else
+    {
+        std::vector<chatGroup_with_members> resp;
+        return resp;
+    }
+    
 }
