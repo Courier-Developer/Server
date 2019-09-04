@@ -102,13 +102,7 @@ int is_username_exists(std::string username) {
         puts("[db-funcs][is_username_exits] executed");
 
         if (R.size() != 0) {
-
-            puts("[db-funcs][is_username_exits] return R");
-            if (R[0].size() != 1) {
-                puts("[db-funcs][is_username_exits] error");
-            }
             int ret = R[0][0].as<int>();
-            puts("[db-funcs][is_username_exits] ger return value");
 
             return ret;
         } else {
@@ -196,7 +190,7 @@ bool logout(int uid) {
  * @return Response<UserInfo>
  */
 UserInfo get_info_by_uid(int uid) {
-    uid = threadManager.get_uid();
+    // uid = threadManager.get_uid();
     pqxx::connection C(DBLOGINFO);
     if (C.is_open()) {
         pqxx::work W(C);
@@ -206,7 +200,7 @@ UserInfo get_info_by_uid(int uid) {
                           std::to_string(uid) + ";";
         pqxx::result R = W.exec(sql);
         UserInfo info;
-        info.id = atoi(R[0][0].c_str());
+        info.id = R[0][0].as<int>();
         info.username = R[0][1].c_str();
         info.createdTime = R[0][2].c_str();
         info.lastLoginTime = R[0][3].c_str();
@@ -214,8 +208,7 @@ UserInfo get_info_by_uid(int uid) {
         info.isMale = strcmp(R[0][5].c_str(), "true") ? 1 : 0;
         info.nickname = R[0][6].c_str();
         info.ip = R[0][7].c_str();
-        Response<UserInfo> resp(1, "UserInfo", info);
-        return resp.data;
+        return info;
     } else {
         Response<UserInfo> resp(0, CONNECTION_ERROR);
         return resp.data;
