@@ -63,6 +63,7 @@ struct Friend {
     std::string nickname;
     bool isMute;
     std::string signature;
+    bool isOnline;
     MSGPACK_DEFINE(uid, packageid, username, createdTime, lastLoginTime, birthday,
                    isMale, ip, nickname, isMute);
     friend std::ostream &operator<<(std::ostream &os, Friend &d) {

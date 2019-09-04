@@ -291,7 +291,7 @@ Response<std::vector<Friend>> list_friends(int uid) {
              ++row) {
             Friend tmp;
             tmp.uid = row[0].as<int>();
-            tmp.packageid = row[1].c_str();
+            tmp.packageid = row[1].as<int>();
             tmp.username = row[2].c_str();
             tmp.createdTime = row[3].c_str();
             tmp.lastLoginTime = row[4].c_str();
@@ -301,6 +301,7 @@ Response<std::vector<Friend>> list_friends(int uid) {
             tmp.nickname = row[8].c_str();
             tmp.isMute = strcmp(row[9].c_str(), "true") == 0 ? 1 : 0;
             tmp.signature = row[10].c_str();
+            tmp.isOnline = threadManager.online(tmp.uid);
             all_friend.push_back(tmp);
         }
         Response<std::vector<Friend>> resp(1, "successful", all_friend);
