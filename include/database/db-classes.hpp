@@ -90,14 +90,11 @@ struct ChatGroup {
     }
 };
 
-enum class MsgType { MSGTYPE_TEXT, MSGTYPE_FILE, MSGTYPE_IMAGE };
-
-MSGPACK_ADD_ENUM(MsgType);
 struct Message {
     int id;
     int sender;
     int receiver;
-    MsgType type;
+    int type; //1文字2文件3图片
     std::string createdTime;
     std::string editedTime;
     bool isToGroup;

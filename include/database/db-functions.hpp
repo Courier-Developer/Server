@@ -148,7 +148,7 @@ std::vector<Friend> get_group_mumber(int group_id);
 bool leave_group(int uid, int group_id);
 
 /// \brief 插入一条消息，创建、修改时间均为now
-Message insert_message(int senderId, int receiverId, MsgType type, bool isToGroup,std::string content);
+Message insert_message(int senderId, int receiverId, int type, bool isToGroup,std::string content);
 
 /// \brief 获得上次离线以后所有关于自己的聊天记录
 ///
@@ -240,7 +240,7 @@ int create_chatGroup_and_invite_friends(std::string chatGroupName,std::vector<in
  * @param content 
  * @return int 
  */
-int send_message (int senderid, int receiverid, MsgType type, bool istoGroup, std::string content);
+int send_message (int senderid, int receiverid, int type, bool istoGroup, std::string content);
 
 /**
  * @brief Get the chatGroupWithMembers object
