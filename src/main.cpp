@@ -31,6 +31,7 @@ int main(int argc, char const *argv[]) {
             rpc.bind("find_package",find_package);
             rpc.bind("change_package",change_package);
             rpc.bind("create_package",create_package);
+            rpc.bind("get_all_my_package",get_all_my_package);
             rpc.bind("create_chatGroup_and_invite_friends",create_chatGroup_and_invite_friends);
             rpc.bind("change_name_of_package",change_name_of_package);
             rpc.bind("create_chatGroup_and_invite_friends",create_chatGroup_and_invite_friends);
@@ -48,7 +49,9 @@ int main(int argc, char const *argv[]) {
             rpc.bind("get_my_info",get_my_info);
             rpc.bind("get_all_friends_info",get_all_friends_info);
             rpc.bind("get_all_chatGroups_info",get_all_chatGroups_info);
-
+            rpc.bind("get_chatGroupWithMembers",get_chatGroupWithMembers);
+            // rpc.bind("read_file",read_file_);
+            // rpc.bind("save_file",save_file_);
             rpc.c2s();
         }};
         thread_guard gg(_thread_1);

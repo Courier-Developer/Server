@@ -362,7 +362,7 @@ void Server::s2c() {
                         std::this_thread::yield();
                     }
                     puts("[s2c] sleep for two seconds.");
-                    std::this_thread::sleep_for(std::chrono::seconds(2));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
                     // note<int>(new_socket_handler, "push", p);
                 }
@@ -420,7 +420,7 @@ void Server::c2s() {
                 try {
                     recv_call_and_send(new_socket_handler);
                     printf(
-                        "[c2s][%lld]recv_call_and_send() has ben executed;\n",
+                        "[c2s][%lld]recv_call_and_send() 已经成功执行\n",
                         std::this_thread::get_id());
                 } catch (const std::exception &e) {
                     // 这里会在客户端退出时捕获异常，并进行逻辑处理

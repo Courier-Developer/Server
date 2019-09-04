@@ -17,6 +17,7 @@ int deal_message_push(Message m) {
     return 1;
 }
 
+
 Login ret_login_info() {
     return Login{username : "fky", password : "password", ip : "123.1.1.1"};
 }
@@ -28,12 +29,11 @@ int main() {
         FeverRPC::Client _rpc("127.0.0.1");
         _rpc.bind("login", ret_login_info);
         _rpc.bind("deal_friend_push", deal_push_friend);
-        _rpc.bind("deal_message_push", deal_message_push);
+        _rpc.bind("newMessage", deal_message_push);
         _rpc.s2c();
     }};
     thread_guard g(_thread);
-    rpc.call<int>("notExist",1);
-
+    rpc.call<int>("send_message",2,2,MsgType::MSGTYPE_TEXT,false,"Hello, My Friend!");
 
     this_thread::sleep_for(chrono::seconds(2));
     rpc.call<bool>("logout", 1);

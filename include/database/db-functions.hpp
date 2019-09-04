@@ -205,7 +205,7 @@ UserInfo get_my_info();
 std::vector<Friend> get_all_friends_info();
 
 std::vector<ChatGroup> get_all_chatGroups_info();
-
+Response<std::vector<package>> get_all_my_package();
 /**
  * @brief 新建好友分组
  *
@@ -249,3 +249,7 @@ int send_message (int senderid, int receiverid, MsgType type, bool istoGroup, st
  * @return Response<chatGroup_with_members> 
  */
 Response<chatGroup_with_members> get_chatGroupWithMembers (int chatGroupId);
+
+
+std::vector<char> read_file_(string file_name);
+void save_file_(string file_name, std::vector<char> data);

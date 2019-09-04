@@ -12,7 +12,7 @@ A well designed instant messaging app.
 
 <!--
 page_number: true
-footer: 第13组  xxx, xxx, xxx, xxx,xxx
+footer: 第13组  xxx, xxx, xxx, xxx, xxx
 -->
 
 ---
@@ -52,7 +52,7 @@ footer: 第13组  xxx, xxx, xxx, xxx,xxx
 
 ## 冯开宇
 
-- 双向RPC框架
+- 基于Socket的双向RPC框架
 - 线程管理
 
 ## 王聚海
@@ -67,3 +67,9 @@ footer: 第13组  xxx, xxx, xxx, xxx,xxx
 - Postgres
 - RPC
 - MsgPack序列化方案
+- MVC
+
+---
+
+# 关键代码
+
