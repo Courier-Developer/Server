@@ -45,7 +45,7 @@ extern bool logout(int uid);
 namespace FeverRPC {
 
 /// \brief Socket一次通信中最大数据发送大小
-const int _CHUNK_SIZE = 32768;
+const int _CHUNK_SIZE = 1024;
 
 /// \brief 客户端到服务器通信端口
 const int _C2S_PORT = 8012;
