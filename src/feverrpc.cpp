@@ -319,7 +319,7 @@ void Server::s2c() {
             std::cout << "[s2c]认证成功，并注册" << std::endl;
 
             while (1) {
-                threadManager.print();
+                // threadManager.print();
                 bool online = threadManager.online(uid);
                 if (!online)
                     break;
@@ -374,7 +374,7 @@ void Server::s2c() {
                         }
                     } else {
                         // 没有通知
-                        printf("[%lld]没有通知\n", std::this_thread::get_id());
+                        // printf("[%lld]没有通知\n", std::this_thread::get_id());
                         std::this_thread::yield();
                     }
                     // puts("[s2c] sleep for two seconds.");

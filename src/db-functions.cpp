@@ -147,6 +147,7 @@ int register_account(std::string username, std::string password,
                           username + "', '" + password + "', '" + nickname +
                           "');";
         pqxx::result R_insert = W.exec(sql);
+
         W.commit();
         sql = "select id from userinfo where username='" + username + "';";
         pqxx::work W_select(C);
@@ -748,7 +749,8 @@ std::vector<Message> get_all_message(int uid) {
             " and istogroup = false) or (receiver in (select groupid from "
             "user_in_group where user_in_group.userid = " +
             std::to_string(uid) +
-            ") and istogroup = true) or (sender = " + std::to_string(uid) + ");";
+            ") and istogroup = true) or (sender = " + std::to_string(uid) +
+            ");";
         pqxx::result R = W_getMsg.exec(sql_getMsg);
         std::vector<Message> messages;
         for (pqxx::result::const_iterator row = R.begin(); row != R.end();
@@ -763,7 +765,7 @@ std::vector<Message> get_all_message(int uid) {
             tmp.isToGroup = row[5].as<bool>();
             tmp.content = row[6].c_str();
             messages.push_back(tmp);
-            printf("[db-funcs][get_all_messages] %d\n",row[5].as<bool>());
+            printf("[db-funcs][get_all_messages] %d\n", row[5].as<bool>());
         }
         Response<std::vector<Message>> resp(1, SUCCESS_INFO, messages);
         return resp.data;
@@ -858,7 +860,7 @@ int create_package(int uid, int groupid, std::string package_name) {
         pqxx::work W(C);
 
         int real_groupid;
-        if (groupid == -1 || groupid == -1) {
+        if (groupid == -1 || groupid == 1) {
             real_groupid = groupid;
         } else {
             std::string sql_find_max_groupid =

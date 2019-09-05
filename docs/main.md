@@ -112,6 +112,7 @@ int main(){
 
 ---
 
+服务端
 ```C++
 // Server
 #include "feverrpc.hpp"
@@ -139,11 +140,17 @@ int main(){
 - Socket支持任意大小传输功能 (int)
 - 支持多线程，有多线程调度模块
 - 服务端线程可相互通信
-- 嵌入登录功能
+- 嵌入登录/注册功能
 
 ---
 
 ## 实现方式
 
-- std::function + std::bind 解决函数绑定问题
-- <typename... Args> variadic templates
+- `std::map<std::string, std::function<void(Serializer *, msgpack::object)>>funcs_map;`
+- <typename... Args> variadic templates 解决可变长参数
+- msgpack解决多态存储问题、序列化问题
+
+
+---
+
+![img](img.jpg)
